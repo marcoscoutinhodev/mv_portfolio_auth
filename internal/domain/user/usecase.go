@@ -46,7 +46,7 @@ func (s UseCase) Register(ctx context.Context, input *RegisterInput) *Output {
 		}
 	}
 
-	user := entity.NewUser(input.Name, input.Email, hashedPassword)
+	user := &entity.User{Name: input.Name, Email: input.Email, Password: hashedPassword}
 
 	// this function will ensure that the user who has just been stored in the database
 	// will receive the verification email, otherwise it will return an error and the

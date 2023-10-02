@@ -26,7 +26,7 @@ func (s *RegisterSuite) InputMock() *RegisterInput {
 }
 
 func (s *RegisterSuite) UserMock() *entity.User {
-	return entity.NewUser("any_name", "any_email", "any_password")
+	return entity.NewUser("", "any_name", "any_email", "any_password")
 }
 
 func (s *RegisterSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
