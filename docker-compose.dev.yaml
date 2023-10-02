@@ -10,3 +10,20 @@ services:
       - 8080:8080
     volumes:
       - ./:/home/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    container_name: mv_chat_pg
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: mv_chat
+    ports:
+      - 5432:5432
+    volumes:
+      - ./.docker/pg/:/var/lib/postgresql/data
+    healthcheck:
+      test: "exit 0"
