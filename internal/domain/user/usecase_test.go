@@ -37,6 +37,7 @@ func (s *RegisterSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
 		&__mock__.HasherMock{},
 		&repositoryMock,
 		&__mock__.QueueMock{},
+		&__mock__.Encrypter{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -55,6 +56,7 @@ func (s *RegisterSuite) TestGivenAnEmailRegistered_ShouldReturnError() {
 		&__mock__.HasherMock{},
 		&repositoryMock,
 		&__mock__.QueueMock{},
+		&__mock__.Encrypter{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -79,6 +81,7 @@ func (s *RegisterSuite) TestGivenAnErrorInHasherGeneration_ShouldReturnError() {
 		&hasherMock,
 		&repositoryMock,
 		&__mock__.QueueMock{},
+		&__mock__.Encrypter{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -105,6 +108,7 @@ func (s *RegisterSuite) TestGivenAnErrorOnStoreRepository_ShouldReturnError() {
 		&hasherMock,
 		&repositoryMock,
 		&__mock__.QueueMock{},
+		&__mock__.Encrypter{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -131,6 +135,7 @@ func (s *RegisterSuite) TestSuccessScenario() {
 		&hasherMock,
 		&repositoryMock,
 		&__mock__.QueueMock{},
+		&__mock__.Encrypter{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -147,4 +152,154 @@ func (s *RegisterSuite) TestSuccessScenario() {
 
 func TestRegisterSuite(t *testing.T) {
 	suite.Run(t, new(RegisterSuite))
+}
+
+type AuthSuite struct {
+	suite.Suite
+}
+
+func (s *AuthSuite) InputMock() *AuthInput {
+	return &AuthInput{
+		Email:    "any_email",
+		Password: "any_password",
+	}
+}
+
+func (s *AuthSuite) UserMock() *entity.User {
+	return entity.NewUser("any_id", "any_name", "any_email", "hashed_password")
+}
+
+func (s *AuthSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(nil, errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.QueueMock{},
+		&__mock__.Encrypter{},
+	)
+
+	output, err := sut.Auth(context.Background(), s.InputMock())
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+}
+
+func (s *AuthSuite) TestGivenAnErrorEmailNotRegister_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(nil, nil)
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.QueueMock{},
+		&__mock__.Encrypter{},
+	)
+
+	output, err := sut.Auth(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), Output{
+		StatusCode: http.StatusUnauthorized,
+		Error:      "invalid credentials",
+	}, *output)
+
+	repositoryMock.AssertExpectations(s.T())
+}
+
+func (s *AuthSuite) TestGivenAnInvalidPassword_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
+
+	hasherMock := __mock__.HasherMock{}
+	hasherMock.On("Compare", "hashed_password", "any_password").Return(errors.New("any_error"))
+
+	sut := NewUseCase(
+		&hasherMock,
+		&repositoryMock,
+		&__mock__.QueueMock{},
+		&__mock__.Encrypter{},
+	)
+
+	output, err := sut.Auth(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), Output{
+		StatusCode: http.StatusUnauthorized,
+		Error:      "invalid credentials",
+	}, *output)
+
+	repositoryMock.AssertExpectations(s.T())
+	hasherMock.AssertExpectations(s.T())
+}
+
+func (s *AuthSuite) TestGivenAnErrorInEncrypter_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
+
+	hasherMock := __mock__.HasherMock{}
+	hasherMock.On("Compare", "hashed_password", "any_password").Return(nil)
+
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("Encrypt", map[string]string{
+		"sub": "any_id",
+	}, uint(15), true).Return("", "", errors.New("any_error"))
+
+	sut := NewUseCase(
+		&hasherMock,
+		&repositoryMock,
+		&__mock__.QueueMock{},
+		&encrypter,
+	)
+
+	output, err := sut.Auth(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), output)
+	assert.Equal(s.T(), errors.New("any_error"), err)
+
+	repositoryMock.AssertExpectations(s.T())
+	hasherMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
+}
+
+func (s *AuthSuite) TestGivenValidInput_ShouldReturnAccessTokenAndRefreshToken() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
+
+	hasherMock := __mock__.HasherMock{}
+	hasherMock.On("Compare", "hashed_password", "any_password").Return(nil)
+
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("Encrypt", map[string]string{
+		"sub": "any_id",
+	}, uint(15), true).Return("any_access_token", "any_refresh_token", nil)
+
+	sut := NewUseCase(
+		&hasherMock,
+		&repositoryMock,
+		&__mock__.QueueMock{},
+		&encrypter,
+	)
+
+	output, err := sut.Auth(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), Output{
+		StatusCode: http.StatusOK,
+		Data: map[string]string{
+			"accessToken":  "any_access_token",
+			"refreshToken": "any_refresh_token",
+		},
+	}, *output)
+
+	repositoryMock.AssertExpectations(s.T())
+	hasherMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
+}
+
+func TestAuthSuite(t *testing.T) {
+	suite.Run(t, new(AuthSuite))
 }
