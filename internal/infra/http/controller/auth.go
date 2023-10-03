@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/marcoscoutinhodev/mv_chat/internal/domain/user"
+	"github.com/marcoscoutinhodev/mv_chat/internal/infra/http/middleware"
 	"github.com/marcoscoutinhodev/mv_chat/pkg"
 )
 
@@ -141,6 +142,46 @@ func (a Auth) ForgottenPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	output, err := a.usecase.ForgottenPassword(r.Context(), &input)
+	if err != nil {
+		fmt.Println("internal server error:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "internal server error",
+		})
+		return
+	}
+
+	w.WriteHeader(output.StatusCode)
+	json.NewEncoder(w).Encode(output)
+}
+
+func (a Auth) UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	var input user.UpdatePasswordInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": err,
+		})
+		return
+	}
+
+	var errors []string
+
+	if !pkg.PasswordValidator(input.Password) {
+		errors = append(errors, "poorly formatted password")
+	}
+
+	if len(errors) > 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": errors,
+		})
+		return
+	}
+
+	input.UserID = r.Context().Value(middleware.UserIDKey{}).(string)
+
+	output, err := a.usecase.UpdatePassword(r.Context(), &input)
 	if err != nil {
 		fmt.Println("internal server error:", err)
 		w.WriteHeader(http.StatusInternalServerError)

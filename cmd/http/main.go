@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	chi_middleware "github.com/go-chi/chi/middleware"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/marcoscoutinhodev/mv_chat/factory"
@@ -36,14 +36,18 @@ func main() {
 	db.SetMaxIdleConns(maxIdleConns)
 
 	auth := factory.NewAuth(db)
+	middleware := factory.NewMiddleware()
 
 	mux := chi.NewMux()
-	mux.Use(middleware.Logger)
+	mux.Use(chi_middleware.Logger)
 
 	mux.Route("/auth", func(r chi.Router) {
 		r.Post("/signup", auth.SignUp)
 		r.Post("/signin", auth.SignIn)
 		r.Post("/forgot-password", auth.ForgottenPassword)
+		r.Post("/update-password", func(w http.ResponseWriter, r *http.Request) {
+			middleware.Authorization(w, r, auth.UpdatePassword)
+		})
 	})
 
 	if err := http.ListenAndServe(os.Getenv("SERVER_PORT"), mux); err != nil {
