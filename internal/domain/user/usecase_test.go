@@ -61,7 +61,7 @@ func (s *RegisterSuite) TestGivenAnEmailRegistered_ShouldReturnError() {
 	output := sut.Register(context.Background(), s.InputMock())
 
 	assert.Equal(s.T(), http.StatusConflict, output.StatusCode)
-	assert.Equal(s.T(), errors.New("email is already registered"), output.Error)
+	assert.Equal(s.T(), "email is already registered", output.Error)
 	assert.Nil(s.T(), output.Data)
 
 	repositoryMock.AssertExpectations(s.T())
