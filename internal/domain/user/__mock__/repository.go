@@ -31,3 +31,8 @@ func (m *RepositoryMock) Store(ctx context.Context, user *entity.User, fn func()
 	args := m.Called(ctx, user, fn)
 	return args.Error(0)
 }
+
+func (m *RepositoryMock) Update(ctx context.Context, user *entity.User) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}

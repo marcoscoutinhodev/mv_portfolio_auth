@@ -424,3 +424,137 @@ func (s *ForgottenPasswordSuite) TestGivenNoError_ShouldReturnGenericResponse() 
 func TestForgottenPasswordSuite(t *testing.T) {
 	suite.Run(t, new(ForgottenPasswordSuite))
 }
+
+type UpdatePasswordSuite struct {
+	suite.Suite
+}
+
+func (s *UpdatePasswordSuite) InputMock() *UpdatePasswordInput {
+	return &UpdatePasswordInput{
+		UserID:   "any_id",
+		Password: "any_password",
+	}
+}
+
+func (s *UpdatePasswordSuite) UserMock() *entity.User {
+	return entity.NewUser("any_id", "any_name", "any_email", "hashed_password_from_db")
+}
+
+func (s *UpdatePasswordSuite) TestGivenAnErrorOnFind_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("Find", context.Background(), "any_id").Return(nil, errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&__mock__.Encrypter{},
+	)
+
+	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+}
+
+func (s *UpdatePasswordSuite) TestGivenAnNilUser_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("Find", context.Background(), "any_id").Return(nil, nil)
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&__mock__.Encrypter{},
+	)
+
+	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
+
+	assert.Equal(s.T(), errors.New("user not found in database"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+}
+
+func (s *UpdatePasswordSuite) TestGivenAnErrorInHasherGeneration_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("Find", context.Background(), "any_id").Return(s.UserMock(), nil)
+
+	hasherMock := __mock__.HasherMock{}
+	hasherMock.On("Generate", "any_password").Return("", errors.New("any_error"))
+
+	sut := NewUseCase(
+		&hasherMock,
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&__mock__.Encrypter{},
+	)
+
+	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+	hasherMock.AssertExpectations(s.T())
+}
+
+func (s *UpdatePasswordSuite) TestGivenAnErrorInUpdate_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("Find", context.Background(), "any_id").Return(s.UserMock(), nil)
+	userMock := s.UserMock()
+	userMock.Password = "hashed_password"
+	repositoryMock.On("Update", context.Background(), userMock).Return(errors.New("any_error"))
+
+	hasherMock := __mock__.HasherMock{}
+	hasherMock.On("Generate", "any_password").Return("hashed_password", nil)
+
+	sut := NewUseCase(
+		&hasherMock,
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&__mock__.Encrypter{},
+	)
+
+	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+	hasherMock.AssertExpectations(s.T())
+}
+
+func (s *UpdatePasswordSuite) TestShouldReturnOKOnSuccess() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("Find", context.Background(), "any_id").Return(s.UserMock(), nil)
+	userMock := s.UserMock()
+	userMock.Password = "hashed_password"
+	repositoryMock.On("Update", context.Background(), userMock).Return(nil)
+
+	hasherMock := __mock__.HasherMock{}
+	hasherMock.On("Generate", "any_password").Return("hashed_password", nil)
+
+	sut := NewUseCase(
+		&hasherMock,
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&__mock__.Encrypter{},
+	)
+
+	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), Output{
+		StatusCode: http.StatusOK,
+	}, *output)
+
+	repositoryMock.AssertExpectations(s.T())
+	hasherMock.AssertExpectations(s.T())
+}
+
+func TestUpdatePasswordSuite(t *testing.T) {
+	suite.Run(t, new(UpdatePasswordSuite))
+}
