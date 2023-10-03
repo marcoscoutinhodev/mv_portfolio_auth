@@ -11,13 +11,15 @@ type UseCase struct {
 	hasher     Hasher
 	repository Repository
 	queue      Queue
+	encrypter  Encrypter
 }
 
-func NewUseCase(hasher Hasher, repository Repository, queue Queue) *UseCase {
+func NewUseCase(hasher Hasher, repository Repository, queue Queue, encrypter Encrypter) *UseCase {
 	return &UseCase{
 		hasher:     hasher,
 		repository: repository,
 		queue:      queue,
+		encrypter:  encrypter,
 	}
 }
 
@@ -57,5 +59,36 @@ func (s UseCase) Register(ctx context.Context, input *RegisterInput) (*Output, e
 	return &Output{
 		StatusCode: http.StatusCreated,
 		Data:       "check your inbox to verify your email and activate your account",
+	}, nil
+}
+
+func (u UseCase) Auth(ctx context.Context, input *AuthInput) (*Output, error) {
+	user, err := u.repository.FindByEmail(ctx, input.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	if user != nil {
+		if err := u.hasher.Compare(user.Password, input.Password); err == nil {
+			token, refreshToken, err := u.encrypter.Encrypt(map[string]string{
+				"sub": user.ID,
+			}, 15, true)
+			if err != nil {
+				return nil, err
+			}
+
+			return &Output{
+				StatusCode: http.StatusOK,
+				Data: map[string]string{
+					"accessToken":  token,
+					"refreshToken": refreshToken,
+				},
+			}, nil
+		}
+	}
+
+	return &Output{
+		StatusCode: http.StatusUnauthorized,
+		Error:      "invalid credentials",
 	}, nil
 }

@@ -24,7 +24,8 @@ type Output struct {
 }
 
 type UseCaseInterface interface {
-	Register(ctx context.Context, input *RegisterInput) *Output
+	Register(ctx context.Context, input *RegisterInput) (*Output, error)
+	Auth(ctx context.Context, input *AuthInput) (*Output, error)
 }
 
 type Repository interface {
@@ -40,4 +41,8 @@ type Hasher interface {
 
 type Queue interface {
 	RegisterNotification(ctx context.Context, user *entity.User) error
+}
+
+type Encrypter interface {
+	Encrypt(payload interface{}, minutesToExpire uint, rt bool) (token string, refreshToken string, err error)
 }
