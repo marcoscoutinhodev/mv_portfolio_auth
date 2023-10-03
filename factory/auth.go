@@ -2,6 +2,8 @@ package factory
 
 import (
 	"database/sql"
+	"errors"
+	"os"
 
 	"github.com/marcoscoutinhodev/mv_chat/internal/domain/user"
 	"github.com/marcoscoutinhodev/mv_chat/internal/infra/adapter"
@@ -17,7 +19,14 @@ func NewAuth(db *sql.DB) *Auth {
 	hasher := adapter.NewHasher()
 	repository := repository.NewUserRepository(db)
 	queue := adapter.NewQueue()
-	usecase := user.NewUseCase(hasher, repository, queue)
+
+	secretKey := os.Getenv("JWT_SECRET_KEY_DEFAULT")
+	if secretKey == "" {
+		panic(errors.New("JWT_SECRET_KEY_DEFAULT is not found in .env"))
+	}
+	encrypter := adapter.NewEncrypter(secretKey)
+
+	usecase := user.NewUseCase(hasher, repository, queue, encrypter)
 	controller := controller.NewAuth(*usecase)
 
 	return &Auth{
