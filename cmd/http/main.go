@@ -43,6 +43,7 @@ func main() {
 	mux.Route("/auth", func(r chi.Router) {
 		r.Post("/signup", auth.SignUp)
 		r.Post("/signin", auth.SignIn)
+		r.Post("/forgot-password", auth.ForgottenPassword)
 	})
 
 	if err := http.ListenAndServe(os.Getenv("SERVER_PORT"), mux); err != nil {
