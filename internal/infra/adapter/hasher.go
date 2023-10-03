@@ -5,6 +5,10 @@ import "golang.org/x/crypto/bcrypt"
 type Hasher struct {
 }
 
+func NewHasher() *Hasher {
+	return &Hasher{}
+}
+
 func (h Hasher) Generate(plaintext string) (string, error) {
 	hasher, err := bcrypt.GenerateFromPassword([]byte(plaintext), bcrypt.DefaultCost)
 	if err != nil {

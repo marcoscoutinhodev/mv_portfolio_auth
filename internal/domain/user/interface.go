@@ -24,8 +24,7 @@ type Output struct {
 }
 
 type UseCaseInterface interface {
-	Register(ctx context.Context, input *RegisterInput) error
-	Auth(ctx context.Context, input *AuthInput) (*entity.User, error)
+	Register(ctx context.Context, input *RegisterInput) *Output
 }
 
 type Repository interface {

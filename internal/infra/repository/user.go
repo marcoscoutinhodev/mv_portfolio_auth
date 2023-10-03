@@ -10,14 +10,24 @@ import (
 )
 
 type UserRepository struct {
-	db        *sql.DB
-	txOptions *sql.TxOptions
-	queries   *postgres.Queries
+	db      *sql.DB
+	queries *postgres.Queries
+}
+
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{
+		db:      db,
+		queries: postgres.New(db),
+	}
 }
 
 func (u UserRepository) Find(ctx context.Context, id string) (*entity.User, error) {
 	user, err := u.queries.Find(ctx, id)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+
 		return nil, err
 	}
 
@@ -27,6 +37,10 @@ func (u UserRepository) Find(ctx context.Context, id string) (*entity.User, erro
 func (u UserRepository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
 	user, err := u.queries.FindByEmail(ctx, email)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+
 		return nil, err
 	}
 
@@ -34,7 +48,9 @@ func (u UserRepository) FindByEmail(ctx context.Context, email string) (*entity.
 }
 
 func (u UserRepository) Store(ctx context.Context, user *entity.User, fn func() error) error {
-	tx, err := u.db.BeginTx(ctx, u.txOptions)
+	tx, err := u.db.BeginTx(ctx, &sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+	})
 	if err != nil {
 		return err
 	}

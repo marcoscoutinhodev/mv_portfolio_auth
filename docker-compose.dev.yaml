@@ -31,7 +31,7 @@ services:
       test: "exit 0"
 
   rabbitmq:
-    image: rabbitmq:3.13-rc-alpine
+    image: rabbitmq:3.13-rc-management-alpine
     container_name: mv_chat_amqp
     environment:
       - RABBITMQ_DEFAULT_USER=admin

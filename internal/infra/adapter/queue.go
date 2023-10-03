@@ -15,9 +15,9 @@ type Queue struct {
 	registerNotificationExchange string
 }
 
-func NewQueue(amqp amqp.AMQP) *Queue {
+func NewQueue() *Queue {
 	return &Queue{
-		amqp:                         amqp,
+		amqp:                         *amqp.NewAMQP(),
 		registerNotificationQueue:    os.Getenv("REGISTER_NOTIFICATION_QUEUE"),
 		registerNotificationExchange: os.Getenv("REGISTER_NOTIFICATION_EXCHANGE"),
 	}

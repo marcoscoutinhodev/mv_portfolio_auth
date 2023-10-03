@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/marcoscoutinhodev/mv_chat/internal/entity"
@@ -34,7 +33,7 @@ func (s UseCase) Register(ctx context.Context, input *RegisterInput) *Output {
 	if u != nil {
 		return &Output{
 			StatusCode: http.StatusConflict,
-			Error:      errors.New("email is already registered"),
+			Error:      "email is already registered",
 		}
 	}
 
