@@ -303,3 +303,124 @@ func (s *AuthSuite) TestGivenValidInput_ShouldReturnAccessTokenAndRefreshToken()
 func TestAuthSuite(t *testing.T) {
 	suite.Run(t, new(AuthSuite))
 }
+
+type ForgottenPasswordSuite struct {
+	suite.Suite
+}
+
+func (s *ForgottenPasswordSuite) InputMock() *ForgottenPasswordInput {
+	return &ForgottenPasswordInput{
+		Email: "any_email",
+	}
+}
+
+func (s *ForgottenPasswordSuite) UserMock() *entity.User {
+	return entity.NewUser("any_id", "any_name", "any_email", "hashed_password")
+}
+
+func (s *ForgottenPasswordSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(nil, errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.QueueMock{},
+		&__mock__.Encrypter{},
+	)
+
+	output, err := sut.ForgottenPassword(context.Background(), s.InputMock())
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+}
+
+func (s *ForgottenPasswordSuite) TestGivenAnErrorInEncrypter_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
+
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("Encrypt", map[string]string{
+		"sub": "any_id",
+	}, uint(60), false).Return("", "", errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.QueueMock{},
+		&encrypter,
+	)
+
+	output, err := sut.ForgottenPassword(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), output)
+	assert.Equal(s.T(), errors.New("any_error"), err)
+
+	repositoryMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
+}
+
+func (s *ForgottenPasswordSuite) TestGivenAnErrorInForgottenPasswordNotification_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
+
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("Encrypt", map[string]string{
+		"sub": "any_id",
+	}, uint(60), false).Return("any_token", "", nil)
+
+	queueMock := __mock__.QueueMock{}
+	queueMock.On("ForgottenPasswordNotification", context.Background(), s.UserMock(), "any_token").Return(errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&queueMock,
+		&encrypter,
+	)
+
+	output, err := sut.ForgottenPassword(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), output)
+	assert.Equal(s.T(), errors.New("any_error"), err)
+
+	repositoryMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
+}
+
+func (s *ForgottenPasswordSuite) TestGivenNoError_ShouldReturnGenericResponse() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
+
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("Encrypt", map[string]string{
+		"sub": "any_id",
+	}, uint(60), false).Return("any_token", "", nil)
+
+	queueMock := __mock__.QueueMock{}
+	queueMock.On("ForgottenPasswordNotification", context.Background(), s.UserMock(), "any_token").Return(nil)
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&queueMock,
+		&encrypter,
+	)
+
+	output, err := sut.ForgottenPassword(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), Output{
+		StatusCode: http.StatusOK,
+		Data:       "if the email provided is found, you will receive instructions to recover the password in your inbox",
+	}, *output)
+
+	repositoryMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
+}
+
+func TestForgottenPasswordSuite(t *testing.T) {
+	suite.Run(t, new(ForgottenPasswordSuite))
+}
