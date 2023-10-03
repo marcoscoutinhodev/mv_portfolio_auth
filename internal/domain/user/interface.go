@@ -17,6 +17,10 @@ type AuthInput struct {
 	Password string `json:"password"`
 }
 
+type ForgottenPasswordInput struct {
+	Email string `json:"email"`
+}
+
 type Output struct {
 	StatusCode int         `json:"-"`
 	Data       interface{} `json:"data,omitempty"`
@@ -26,6 +30,7 @@ type Output struct {
 type UseCaseInterface interface {
 	Register(ctx context.Context, input *RegisterInput) (*Output, error)
 	Auth(ctx context.Context, input *AuthInput) (*Output, error)
+	ForgottenPassword(ctx context.Context, input *ForgottenPasswordInput) (*Output, error)
 }
 
 type Repository interface {
@@ -41,6 +46,7 @@ type Hasher interface {
 
 type Queue interface {
 	RegisterNotification(ctx context.Context, user *entity.User) error
+	ForgottenPasswordNotification(ctx context.Context, user *entity.User, token string) error
 }
 
 type Encrypter interface {

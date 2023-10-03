@@ -92,3 +92,28 @@ func (u UseCase) Auth(ctx context.Context, input *AuthInput) (*Output, error) {
 		Error:      "invalid credentials",
 	}, nil
 }
+
+func (u UseCase) ForgottenPassword(ctx context.Context, input *ForgottenPasswordInput) (*Output, error) {
+	user, err := u.repository.FindByEmail(ctx, input.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	if user != nil {
+		token, _, err := u.encrypter.Encrypt(map[string]string{
+			"sub": user.ID,
+		}, 60, false)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := u.queue.ForgottenPasswordNotification(ctx, user, token); err != nil {
+			return nil, err
+		}
+	}
+
+	return &Output{
+		StatusCode: http.StatusOK,
+		Data:       "if the email provided is found, you will receive instructions to recover the password in your inbox",
+	}, nil
+}
