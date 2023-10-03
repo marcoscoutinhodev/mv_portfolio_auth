@@ -15,3 +15,7 @@ func NewUser(id, name, email, password string) *User {
 		Password: password,
 	}
 }
+
+func (u *User) UpdatePassword(password string) {
+	u.Password = password
+}
