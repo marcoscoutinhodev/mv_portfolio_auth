@@ -22,7 +22,7 @@ func NewAMQP() *AMQP {
 	}
 }
 
-func (a AMQP) Producer(ctx context.Context, queue, exchange string, body []byte) error {
+func (a AMQP) Producer(ctx context.Context, emailNotification, exchange string, body []byte) error {
 	if a.conn.IsClosed() {
 		c, err := amqp.Dial(os.Getenv("RBMQ_URI"))
 		if err != nil {
@@ -42,7 +42,7 @@ func (a AMQP) Producer(ctx context.Context, queue, exchange string, body []byte)
 	if err := ch.PublishWithContext(
 		ctx,
 		exchange,
-		queue,
+		emailNotification,
 		true,
 		false,
 		amqp.Publishing{

@@ -43,7 +43,7 @@ func NewAuth(db *sql.DB) *Auth {
 		panic(errors.New("FORGOT_PASSWORD_NOTIFICATION_EXCHANGE is not found in .env"))
 	}
 
-	queue := adapter.NewQueue()
+	emailNotification := adapter.NewEmailNotification()
 
 	secretKey := os.Getenv("JWT_SECRET_KEY_DEFAULT")
 	if secretKey == "" {
@@ -51,7 +51,7 @@ func NewAuth(db *sql.DB) *Auth {
 	}
 	encrypter := adapter.NewEncrypter(secretKey)
 
-	usecase := user.NewUseCase(hasher, repository, queue, encrypter)
+	usecase := user.NewUseCase(hasher, repository, emailNotification, encrypter)
 	controller := controller.NewAuth(*usecase)
 
 	return &Auth{

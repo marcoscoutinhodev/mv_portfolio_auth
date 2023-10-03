@@ -8,18 +8,18 @@ import (
 )
 
 type UseCase struct {
-	hasher     Hasher
-	repository Repository
-	queue      Queue
-	encrypter  Encrypter
+	hasher            Hasher
+	repository        Repository
+	emailNotification EmailNotification
+	encrypter         Encrypter
 }
 
-func NewUseCase(hasher Hasher, repository Repository, queue Queue, encrypter Encrypter) *UseCase {
+func NewUseCase(hasher Hasher, repository Repository, emailNotification EmailNotification, encrypter Encrypter) *UseCase {
 	return &UseCase{
-		hasher:     hasher,
-		repository: repository,
-		queue:      queue,
-		encrypter:  encrypter,
+		hasher:            hasher,
+		repository:        repository,
+		emailNotification: emailNotification,
+		encrypter:         encrypter,
 	}
 }
 
@@ -47,7 +47,7 @@ func (s UseCase) Register(ctx context.Context, input *RegisterInput) (*Output, e
 	// will receive the verification email, otherwise it will return an error and the
 	// user will not be stored in the database
 	if err := s.repository.Store(ctx, user, func() error {
-		if err := s.queue.RegisterNotification(ctx, user); err != nil {
+		if err := s.emailNotification.Register(ctx, user); err != nil {
 			return err
 		}
 
@@ -107,7 +107,7 @@ func (u UseCase) ForgottenPassword(ctx context.Context, input *ForgottenPassword
 			return nil, err
 		}
 
-		if err := u.queue.ForgottenPasswordNotification(ctx, user, token); err != nil {
+		if err := u.emailNotification.ForgottenPassword(ctx, user, token); err != nil {
 			return nil, err
 		}
 	}

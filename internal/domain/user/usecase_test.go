@@ -36,7 +36,7 @@ func (s *RegisterSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
 	sut := NewUseCase(
 		&__mock__.HasherMock{},
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
 	)
 
@@ -55,7 +55,7 @@ func (s *RegisterSuite) TestGivenAnEmailRegistered_ShouldReturnError() {
 	sut := NewUseCase(
 		&__mock__.HasherMock{},
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
 	)
 
@@ -80,7 +80,7 @@ func (s *RegisterSuite) TestGivenAnErrorInHasherGeneration_ShouldReturnError() {
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
 	)
 
@@ -107,7 +107,7 @@ func (s *RegisterSuite) TestGivenAnErrorOnStoreRepository_ShouldReturnError() {
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
 	)
 
@@ -134,7 +134,7 @@ func (s *RegisterSuite) TestSuccessScenario() {
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
 	)
 
@@ -176,7 +176,7 @@ func (s *AuthSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
 	sut := NewUseCase(
 		&__mock__.HasherMock{},
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
 	)
 
@@ -195,7 +195,7 @@ func (s *AuthSuite) TestGivenAnErrorEmailNotRegister_ShouldReturnError() {
 	sut := NewUseCase(
 		&__mock__.HasherMock{},
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
 	)
 
@@ -220,7 +220,7 @@ func (s *AuthSuite) TestGivenAnInvalidPassword_ShouldReturnError() {
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
 	)
 
@@ -251,7 +251,7 @@ func (s *AuthSuite) TestGivenAnErrorInEncrypter_ShouldReturnError() {
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&encrypter,
 	)
 
@@ -280,7 +280,7 @@ func (s *AuthSuite) TestGivenValidInput_ShouldReturnAccessTokenAndRefreshToken()
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&encrypter,
 	)
 
@@ -325,7 +325,7 @@ func (s *ForgottenPasswordSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError
 	sut := NewUseCase(
 		&__mock__.HasherMock{},
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
 	)
 
@@ -349,7 +349,7 @@ func (s *ForgottenPasswordSuite) TestGivenAnErrorInEncrypter_ShouldReturnError()
 	sut := NewUseCase(
 		&__mock__.HasherMock{},
 		&repositoryMock,
-		&__mock__.QueueMock{},
+		&__mock__.EmailNotificationMock{},
 		&encrypter,
 	)
 
@@ -362,7 +362,7 @@ func (s *ForgottenPasswordSuite) TestGivenAnErrorInEncrypter_ShouldReturnError()
 	encrypter.AssertExpectations(s.T())
 }
 
-func (s *ForgottenPasswordSuite) TestGivenAnErrorInForgottenPasswordNotification_ShouldReturnError() {
+func (s *ForgottenPasswordSuite) TestGivenAnErrorInForgottenPassword_ShouldReturnError() {
 	repositoryMock := __mock__.RepositoryMock{}
 	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
 
@@ -371,13 +371,13 @@ func (s *ForgottenPasswordSuite) TestGivenAnErrorInForgottenPasswordNotification
 		"sub": "any_id",
 	}, uint(60), false).Return("any_token", "", nil)
 
-	queueMock := __mock__.QueueMock{}
-	queueMock.On("ForgottenPasswordNotification", context.Background(), s.UserMock(), "any_token").Return(errors.New("any_error"))
+	emailNotificationMock := __mock__.EmailNotificationMock{}
+	emailNotificationMock.On("ForgottenPassword", context.Background(), s.UserMock(), "any_token").Return(errors.New("any_error"))
 
 	sut := NewUseCase(
 		&__mock__.HasherMock{},
 		&repositoryMock,
-		&queueMock,
+		&emailNotificationMock,
 		&encrypter,
 	)
 
@@ -399,13 +399,13 @@ func (s *ForgottenPasswordSuite) TestGivenNoError_ShouldReturnGenericResponse() 
 		"sub": "any_id",
 	}, uint(60), false).Return("any_token", "", nil)
 
-	queueMock := __mock__.QueueMock{}
-	queueMock.On("ForgottenPasswordNotification", context.Background(), s.UserMock(), "any_token").Return(nil)
+	emailNotificationMock := __mock__.EmailNotificationMock{}
+	emailNotificationMock.On("ForgottenPassword", context.Background(), s.UserMock(), "any_token").Return(nil)
 
 	sut := NewUseCase(
 		&__mock__.HasherMock{},
 		&repositoryMock,
-		&queueMock,
+		&emailNotificationMock,
 		&encrypter,
 	)
 

@@ -7,16 +7,16 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type QueueMock struct {
+type EmailNotificationMock struct {
 	mock.Mock
 }
 
-func (m *QueueMock) RegisterNotification(ctx context.Context, user *entity.User) error {
+func (m *EmailNotificationMock) Register(ctx context.Context, user *entity.User) error {
 	args := m.Called(ctx, user)
 	return args.Error(0)
 }
 
-func (m *QueueMock) ForgottenPasswordNotification(ctx context.Context, user *entity.User, token string) error {
+func (m *EmailNotificationMock) ForgottenPassword(ctx context.Context, user *entity.User, token string) error {
 	args := m.Called(ctx, user, token)
 	return args.Error(0)
 }

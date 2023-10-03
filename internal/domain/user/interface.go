@@ -44,9 +44,9 @@ type Hasher interface {
 	Compare(hash, plaintext string) error
 }
 
-type Queue interface {
-	RegisterNotification(ctx context.Context, user *entity.User) error
-	ForgottenPasswordNotification(ctx context.Context, user *entity.User, token string) error
+type EmailNotification interface {
+	Register(ctx context.Context, user *entity.User) error
+	ForgottenPassword(ctx context.Context, user *entity.User, token string) error
 }
 
 type Encrypter interface {
