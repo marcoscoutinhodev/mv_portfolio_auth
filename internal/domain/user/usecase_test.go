@@ -39,11 +39,10 @@ func (s *RegisterSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
 		&__mock__.QueueMock{},
 	)
 
-	output := sut.Register(context.Background(), s.InputMock())
+	output, err := sut.Register(context.Background(), s.InputMock())
 
-	assert.Equal(s.T(), http.StatusInternalServerError, output.StatusCode)
-	assert.Equal(s.T(), errors.New("any_error"), output.Error)
-	assert.Nil(s.T(), output.Data)
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
 
 	repositoryMock.AssertExpectations(s.T())
 }
@@ -58,7 +57,9 @@ func (s *RegisterSuite) TestGivenAnEmailRegistered_ShouldReturnError() {
 		&__mock__.QueueMock{},
 	)
 
-	output := sut.Register(context.Background(), s.InputMock())
+	output, err := sut.Register(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), err)
 
 	assert.Equal(s.T(), http.StatusConflict, output.StatusCode)
 	assert.Equal(s.T(), "email is already registered", output.Error)
@@ -80,11 +81,10 @@ func (s *RegisterSuite) TestGivenAnErrorInHasherGeneration_ShouldReturnError() {
 		&__mock__.QueueMock{},
 	)
 
-	output := sut.Register(context.Background(), s.InputMock())
+	output, err := sut.Register(context.Background(), s.InputMock())
 
-	assert.Equal(s.T(), http.StatusInternalServerError, output.StatusCode)
-	assert.Equal(s.T(), errors.New("any_error"), output.Error)
-	assert.Nil(s.T(), output.Data)
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
 
 	repositoryMock.AssertExpectations(s.T())
 	hasherMock.AssertExpectations(s.T())
@@ -107,11 +107,10 @@ func (s *RegisterSuite) TestGivenAnErrorOnStoreRepository_ShouldReturnError() {
 		&__mock__.QueueMock{},
 	)
 
-	output := sut.Register(context.Background(), s.InputMock())
+	output, err := sut.Register(context.Background(), s.InputMock())
 
-	assert.Equal(s.T(), http.StatusInternalServerError, output.StatusCode)
-	assert.Equal(s.T(), errors.New("any_error"), output.Error)
-	assert.Nil(s.T(), output.Data)
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
 
 	repositoryMock.AssertExpectations(s.T())
 	hasherMock.AssertExpectations(s.T())
@@ -134,7 +133,9 @@ func (s *RegisterSuite) TestSuccessScenario() {
 		&__mock__.QueueMock{},
 	)
 
-	output := sut.Register(context.Background(), s.InputMock())
+	output, err := sut.Register(context.Background(), s.InputMock())
+
+	assert.Nil(s.T(), err)
 
 	assert.Equal(s.T(), http.StatusCreated, output.StatusCode)
 	assert.Equal(s.T(), "check your inbox to verify your email and activate your account", output.Data)

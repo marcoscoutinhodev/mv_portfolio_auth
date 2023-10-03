@@ -56,10 +56,9 @@ func (a Auth) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	output := a.usecase.Register(r.Context(), &input)
-
-	if output.StatusCode == http.StatusInternalServerError {
-		fmt.Println("internal server error:", output.Error)
+	output, err := a.usecase.Register(r.Context(), &input)
+	if err != nil {
+		fmt.Println("internal server error:", err)
 		w.WriteHeader(output.StatusCode)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"error": "internal server error",

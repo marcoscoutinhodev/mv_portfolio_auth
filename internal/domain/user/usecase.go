@@ -21,28 +21,22 @@ func NewUseCase(hasher Hasher, repository Repository, queue Queue) *UseCase {
 	}
 }
 
-func (s UseCase) Register(ctx context.Context, input *RegisterInput) *Output {
+func (s UseCase) Register(ctx context.Context, input *RegisterInput) (*Output, error) {
 	u, err := s.repository.FindByEmail(ctx, input.Email)
 	if err != nil {
-		return &Output{
-			StatusCode: http.StatusInternalServerError,
-			Error:      err,
-		}
+		return nil, err
 	}
 
 	if u != nil {
 		return &Output{
 			StatusCode: http.StatusConflict,
 			Error:      "email is already registered",
-		}
+		}, nil
 	}
 
 	hashedPassword, err := s.hasher.Generate(input.Password)
 	if err != nil {
-		return &Output{
-			StatusCode: http.StatusInternalServerError,
-			Error:      err,
-		}
+		return nil, err
 	}
 
 	user := &entity.User{Name: input.Name, Email: input.Email, Password: hashedPassword}
@@ -57,14 +51,11 @@ func (s UseCase) Register(ctx context.Context, input *RegisterInput) *Output {
 
 		return nil
 	}); err != nil {
-		return &Output{
-			StatusCode: http.StatusInternalServerError,
-			Error:      err,
-		}
+		return nil, err
 	}
 
 	return &Output{
 		StatusCode: http.StatusCreated,
 		Data:       "check your inbox to verify your email and activate your account",
-	}
+	}, nil
 }
