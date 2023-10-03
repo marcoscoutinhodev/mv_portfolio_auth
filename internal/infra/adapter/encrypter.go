@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -46,4 +47,16 @@ func (e Encrypter) Encrypt(payload interface{}, minutesToExpire uint, rt bool) (
 	}
 
 	return token, "", nil
+}
+
+func (e Encrypter) Decrypt(token string) (payload map[string]interface{}, err error) {
+	claims := jwt.MapClaims{}
+	if _, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {
+		return []byte(e.secretKey), nil
+	}); err != nil {
+		fmt.Println("to aq:", err)
+		return nil, err
+	}
+
+	return claims, err
 }
