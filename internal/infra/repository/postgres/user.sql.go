@@ -61,3 +61,24 @@ func (q *Queries) Store(ctx context.Context, arg StoreParams) error {
 	)
 	return err
 }
+
+const update = `-- name: Update :exec
+UPDATE users u SET name = $2, email = $3, password = $4 WHERE u.id = $1
+`
+
+type UpdateParams struct {
+	ID       string
+	Name     string
+	Email    string
+	Password string
+}
+
+func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
+	_, err := q.db.ExecContext(ctx, update,
+		arg.ID,
+		arg.Name,
+		arg.Email,
+		arg.Password,
+	)
+	return err
+}

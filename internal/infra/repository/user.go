@@ -75,3 +75,16 @@ func (u UserRepository) Store(ctx context.Context, user *entity.User, fn func() 
 
 	return nil
 }
+
+func (u UserRepository) Update(ctx context.Context, user *entity.User) error {
+	if err := u.queries.Update(ctx, postgres.UpdateParams{
+		ID:       user.ID,
+		Name:     user.Name,
+		Email:    user.Email,
+		Password: user.Password,
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
