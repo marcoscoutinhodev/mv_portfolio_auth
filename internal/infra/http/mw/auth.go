@@ -1,25 +1,27 @@
-package middleware
+package mw
 
 import (
 	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/marcoscoutinhodev/mv_chat/internal/infra/adapter"
 )
 
 type UserIDKey struct{}
 
-type Middleware struct {
-	encrypter Encrypter
+type AuthMiddleware struct {
+	encrypter adapter.EncrypterInterface
 }
 
-func NewMiddleware(encrypter Encrypter) *Middleware {
-	return &Middleware{
+func NewAuthMiddleware(encrypter adapter.EncrypterInterface) *AuthMiddleware {
+	return &AuthMiddleware{
 		encrypter: encrypter,
 	}
 }
 
-func (m Middleware) Authorization(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (m AuthMiddleware) Authorization(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	accessToken := r.Header.Get("x_access_token")
 	if accessToken == "" {
 		w.WriteHeader(http.StatusUnauthorized)

@@ -9,9 +9,12 @@ RUN curl -L https://packagecloud.io/golang-migrate/migrate/gpgkey | apt-key add 
 	apt-get update && \
 	apt-get install -y migrate
 
-RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
+	go install github.com/google/wire/cmd/wire@latest
 
 WORKDIR /home/app
+
+RUN git config --global --add safe.directory /home/app
 
 COPY . .
 RUN go mod tidy

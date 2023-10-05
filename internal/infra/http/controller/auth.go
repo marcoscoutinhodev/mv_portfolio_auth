@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/marcoscoutinhodev/mv_chat/internal/domain/user"
-	"github.com/marcoscoutinhodev/mv_chat/internal/infra/http/middleware"
+	"github.com/marcoscoutinhodev/mv_chat/internal/infra/http/mw"
 	"github.com/marcoscoutinhodev/mv_chat/pkg"
 )
 
@@ -179,7 +179,7 @@ func (a Auth) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	input.UserID = r.Context().Value(middleware.UserIDKey{}).(string)
+	input.UserID = r.Context().Value(mw.UserIDKey{}).(string)
 
 	output, err := a.usecase.UpdatePassword(r.Context(), &input)
 	if err != nil {

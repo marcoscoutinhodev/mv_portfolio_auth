@@ -3,31 +3,27 @@ package adapter
 import (
 	"context"
 	"encoding/json"
-	"os"
 
+	"github.com/marcoscoutinhodev/mv_chat/config"
 	"github.com/marcoscoutinhodev/mv_chat/internal/entity"
 	"github.com/marcoscoutinhodev/mv_chat/internal/infra/amqp"
 )
 
 type EmailNotification struct {
-	amqp                               amqp.AMQP
-	registerKey                        string
-	registerEmailNotification          string
-	registerExchange                   string
-	forgottenPasswordKey               string
-	forgottenPasswordEmailNotification string
-	forgottenPasswordExchange          string
+	amqp                      amqp.AMQP
+	registerKey               string
+	registerExchange          string
+	forgottenPasswordKey      string
+	forgottenPasswordExchange string
 }
 
 func NewEmailNotification() *EmailNotification {
 	return &EmailNotification{
-		amqp:                               *amqp.NewAMQP(),
-		registerEmailNotification:          os.Getenv("REGISTER_NOTIFICATION_QUEUE"),
-		registerKey:                        os.Getenv("REGISTER_NOTIFICATION_KEY"),
-		registerExchange:                   os.Getenv("REGISTER_NOTIFICATION_EXCHANGE"),
-		forgottenPasswordKey:               os.Getenv("FORGOT_PASSWORD_NOTIFICATION_KEY"),
-		forgottenPasswordEmailNotification: os.Getenv("FORGOT_PASSWORD_NOTIFICATION_QUEUE"),
-		forgottenPasswordExchange:          os.Getenv("FORGOT_PASSWORD_NOTIFICATION_EXCHANGE"),
+		amqp:                      *amqp.NewAMQP(),
+		registerKey:               config.REGISTER_NOTIFICATION_KEY,
+		registerExchange:          config.REGISTER_NOTIFICATION_EXCHANGE,
+		forgottenPasswordKey:      config.FORGOT_PASSWORD_NOTIFICATION_KEY,
+		forgottenPasswordExchange: config.FORGOT_PASSWORD_NOTIFICATION_EXCHANGE,
 	}
 }
 

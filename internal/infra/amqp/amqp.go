@@ -2,8 +2,8 @@ package amqp
 
 import (
 	"context"
-	"os"
 
+	"github.com/marcoscoutinhodev/mv_chat/config"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -12,7 +12,7 @@ type AMQP struct {
 }
 
 func NewAMQP() *AMQP {
-	c, err := amqp.Dial(os.Getenv("RBMQ_URI"))
+	c, err := amqp.Dial(config.RBMQ_URI)
 	if err != nil {
 		panic(err)
 	}
@@ -24,7 +24,7 @@ func NewAMQP() *AMQP {
 
 func (a AMQP) Producer(ctx context.Context, emailNotification, exchange string, body []byte) error {
 	if a.conn.IsClosed() {
-		c, err := amqp.Dial(os.Getenv("RBMQ_URI"))
+		c, err := amqp.Dial(config.RBMQ_URI)
 		if err != nil {
 			return err
 		}

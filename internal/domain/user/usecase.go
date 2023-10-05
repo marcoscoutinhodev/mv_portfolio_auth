@@ -6,16 +6,17 @@ import (
 	"net/http"
 
 	"github.com/marcoscoutinhodev/mv_chat/internal/entity"
+	"github.com/marcoscoutinhodev/mv_chat/internal/infra/adapter"
 )
 
 type UseCase struct {
-	hasher            Hasher
-	repository        Repository
-	emailNotification EmailNotification
-	encrypter         Encrypter
+	hasher            adapter.HasherInterface
+	repository        RepositoryInterface
+	emailNotification adapter.EmailNotificationInterface
+	encrypter         adapter.EncrypterInterface
 }
 
-func NewUseCase(hasher Hasher, repository Repository, emailNotification EmailNotification, encrypter Encrypter) *UseCase {
+func NewUseCase(hasher adapter.HasherInterface, repository RepositoryInterface, emailNotification adapter.EmailNotificationInterface, encrypter adapter.EncrypterInterface) *UseCase {
 	return &UseCase{
 		hasher:            hasher,
 		repository:        repository,

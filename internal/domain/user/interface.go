@@ -39,23 +39,9 @@ type UseCaseInterface interface {
 	UpdatePassword(ctx context.Context, input *UpdatePasswordInput) (*Output, error)
 }
 
-type Repository interface {
+type RepositoryInterface interface {
 	Find(ctx context.Context, id string) (*entity.User, error)
 	FindByEmail(ctx context.Context, email string) (*entity.User, error)
 	Store(ctx context.Context, user *entity.User, fn func() error) error
 	Update(ctx context.Context, user *entity.User) error
-}
-
-type Hasher interface {
-	Generate(plaintext string) (string, error)
-	Compare(hash, plaintext string) error
-}
-
-type EmailNotification interface {
-	Register(ctx context.Context, user *entity.User) error
-	ForgottenPassword(ctx context.Context, user *entity.User, token string) error
-}
-
-type Encrypter interface {
-	Encrypt(payload interface{}, minutesToExpire uint, rt bool) (token string, refreshToken string, err error)
 }
