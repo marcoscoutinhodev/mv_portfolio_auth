@@ -1,0 +1,35 @@
+###
+POST http://localhost:8080/auth/signup
+content-Type: 'application/json'
+
+{
+  "name": "lorem",
+  "email": "LOREM@ipsum.com",
+  "password": "P@ssw0rd"
+}
+
+###
+POST http://localhost:8080/auth/signin
+content-Type: 'application/json'
+
+{
+  "email": "LOREM@ipsum.com",
+  "password": "P@ssw0rd123"
+}
+
+###
+POST http://localhost:8080/auth/forgot-password
+content-Type: 'application/json'
+
+{
+  "email": "LOREM@ipsum.com"
+}
+
+###
+POST http://localhost:8080/auth/update-password
+content-Type: 'application/json'
+x_access_token: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwYXlsb2FkIjp7InN1YiI6IjA5N2NmYzhlLWQxZDQtNDI0YS1iNDg5LTFiZTUyM2NlZTdhOSJ9LCJyZWdpc3RlcmVkQ2xhaW1zIjp7ImV4cCI6MTY5NjUzNDA2OX19.tpHwONCMBgKkNohAf7l1x37Qyzgacoqvr5Kk8qriF18mmHekTl23Io-XJOTomm4sdvdX_4bkvbqUQ6qa9CtnViw2RBXVkQzwC2uZ0iCAhLaZgAQnx1m3-plyYTsRv9kIJc-am5df4ictBQ5Bt8b0H7E0nysJCVBKcPCoszgssGc0X_EVPZW1Y6Pp9zH-8YLnHzuIc5DMDsrMQNFlD_DvFvzCUXTM8dKIL9AxPOLUih2r29Q9e0JS3OpUVoGhTvCBR5dh8XSPfQ5iOhLyj-T6sul-BzQ_VUTL2VINg3kWDyxZDtm7ZaGzrM2o0uedonv1BSXl6iAHd1S8G9C1TcFv-FbDDgZntnzyxx7tE8vZ-SdDd-mxzoAZ3Pbf_zpPyHTUHv5nVTnCipyWTsENLH9cUQuzKpMenBGYiKKULKTYXUS0VlH1H7zeL8JOEewp0PIYVWIBypqVhOMcXwTo247HTMU9ecUZ2VC1nAqemCS8ucSXbooeCXfqoUk8cT0HzpZrNpurYEFSmGmkRHhh7bJx3dT5cxU1DjX4AkBrDcMy0WyQfk9yluOFwjE3dROfVi7iYNbsjyg8qKvEkErEs58iiPLc1BYdAuXsKTZ-65GqPfVScf4nArF83nsfCt-64W_gGtLxmsnYZaZaWKI4uQPfS8qAJf5-IzHbUkmVjXlEzZ8
+
+{
+  "password": "P@ssw0rd123"
+}

@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ms_auth_app
+    ports:
+      - 8080:8080
+    volumes:
+      - ./:/home/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    container_name: ms_auth_pg
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ms_auth
+    ports:
+      - 5432:5432
+    volumes:
+      - ./.docker/pg/:/var/lib/postgresql/data
+    healthcheck:
+      test: "exit 0"
+
+  rabbitmq:
+    image: rabbitmq:3.13-rc-management-alpine
+    container_name: ms_auth_amqp
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_DEFAULT_VHOST=/
+    volumes:
+      - ./.docker/amqp:/var/lib/rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 15692:15692
+    healthcheck:
+      test: "exit 0"
