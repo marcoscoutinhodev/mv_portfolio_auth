@@ -19,6 +19,7 @@ var (
 	emailNotification = wire.NewSet(adapter.NewEmailNotification, wire.Bind(new(adapter.EmailNotificationInterface), new(*adapter.EmailNotification)))
 	encrypter         = wire.NewSet(adapter.NewEncrypter, wire.Bind(new(adapter.EncrypterInterface), new(*adapter.Encrypter)))
 	userUseCase       = wire.NewSet(user.NewUseCase, wire.Bind(new(user.UseCaseInterface), new(*user.UseCase)))
+	idGenerator       = wire.NewSet(adapter.NewIDGenerator, wire.Bind(new(adapter.IDGeneratorInterface), new(*adapter.IDGenerator)))
 )
 
 func NewAuthController(db *sql.DB) *controller.Auth {
@@ -28,6 +29,7 @@ func NewAuthController(db *sql.DB) *controller.Auth {
 		emailNotification,
 		encrypter,
 		userUseCase,
+		idGenerator,
 		controller.NewAuth,
 	)
 	return &controller.Auth{}

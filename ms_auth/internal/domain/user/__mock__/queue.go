@@ -11,8 +11,8 @@ type EmailNotificationMock struct {
 	mock.Mock
 }
 
-func (m *EmailNotificationMock) Register(ctx context.Context, user *entity.User) error {
-	args := m.Called(ctx, user)
+func (m *EmailNotificationMock) Register(ctx context.Context, user *entity.User, token string) error {
+	args := m.Called(ctx, user, token)
 	return args.Error(0)
 }
 

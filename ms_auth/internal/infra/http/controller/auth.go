@@ -194,3 +194,20 @@ func (a Auth) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(output.StatusCode)
 	json.NewEncoder(w).Encode(output)
 }
+
+func (a Auth) ConfirmEmail(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(mw.UserIDKey{}).(string)
+
+	output, err := a.usecase.ConfirmEmail(r.Context(), userID)
+	if err != nil {
+		fmt.Println("internal server error:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "internal server error",
+		})
+		return
+	}
+
+	w.WriteHeader(output.StatusCode)
+	json.NewEncoder(w).Encode(output)
+}

@@ -10,6 +10,7 @@ import (
 var (
 	DB_DRIVER                             string
 	DB_URI                                string
+	DB_NAME                               string
 	DB_MAX_IDLE_CONNS                     string
 	SERVER_PORT                           string
 	RBMQ_URI                              string
@@ -19,6 +20,7 @@ var (
 	FORGOT_PASSWORD_NOTIFICATION_EXCHANGE string
 	JWT_PRIVATE_KEY                       string
 	JWT_PUBLIC_KEY                        string
+	JWT_SECRET_KEY                        string
 )
 
 func Load() {
@@ -35,6 +37,10 @@ func Load() {
 
 	if DB_URI = os.Getenv("DB_URI"); DB_URI == "" {
 		errors = append(errors, "DB_URI not found")
+	}
+
+	if DB_NAME = os.Getenv("DB_NAME"); DB_NAME == "" {
+		errors = append(errors, "DB_NAME not found")
 	}
 
 	if DB_MAX_IDLE_CONNS = os.Getenv("DB_MAX_IDLE_CONNS"); DB_MAX_IDLE_CONNS == "" {
@@ -71,6 +77,10 @@ func Load() {
 
 	if JWT_PUBLIC_KEY = os.Getenv("JWT_PUBLIC_KEY"); JWT_PUBLIC_KEY == "" {
 		errors = append(errors, "JWT_PUBLIC_KEY not found")
+	}
+
+	if JWT_SECRET_KEY = os.Getenv("JWT_SECRET_KEY"); JWT_SECRET_KEY == "" {
+		errors = append(errors, "JWT_SECRET_KEY not found")
 	}
 
 	if len(errors) > 0 {

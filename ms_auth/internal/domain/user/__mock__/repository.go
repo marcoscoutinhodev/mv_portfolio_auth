@@ -36,3 +36,8 @@ func (m *RepositoryMock) Update(ctx context.Context, user *entity.User) error {
 	args := m.Called(ctx, user)
 	return args.Error(0)
 }
+
+func (m *RepositoryMock) ConfirmEmail(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}

@@ -14,14 +14,16 @@ type UseCase struct {
 	repository        RepositoryInterface
 	emailNotification adapter.EmailNotificationInterface
 	encrypter         adapter.EncrypterInterface
+	idGenerator       adapter.IDGeneratorInterface
 }
 
-func NewUseCase(hasher adapter.HasherInterface, repository RepositoryInterface, emailNotification adapter.EmailNotificationInterface, encrypter adapter.EncrypterInterface) *UseCase {
+func NewUseCase(hasher adapter.HasherInterface, repository RepositoryInterface, emailNotification adapter.EmailNotificationInterface, encrypter adapter.EncrypterInterface, idGenerator adapter.IDGeneratorInterface) *UseCase {
 	return &UseCase{
 		hasher:            hasher,
 		repository:        repository,
 		emailNotification: emailNotification,
 		encrypter:         encrypter,
+		idGenerator:       idGenerator,
 	}
 }
 
@@ -43,13 +45,20 @@ func (u UseCase) Register(ctx context.Context, input *RegisterInput) (*Output, e
 		return nil, err
 	}
 
-	user := &entity.User{Name: input.Name, Email: input.Email, Password: hashedPassword}
+	user := entity.NewUser(u.idGenerator.Generate(), input.Name, input.Email, hashedPassword)
+
+	token, err := u.encrypter.EncryptTemporary(map[string]interface{}{
+		"sub": user.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	// this function will ensure that the user who has just been stored in the database
 	// will receive the verification email, otherwise it will return an error and the
 	// user will not be stored in the database
 	if err := u.repository.Store(ctx, user, func() error {
-		if err := u.emailNotification.Register(ctx, user); err != nil {
+		if err := u.emailNotification.Register(ctx, user, token); err != nil {
 			return err
 		}
 
@@ -72,9 +81,16 @@ func (u UseCase) Auth(ctx context.Context, input *AuthInput) (*Output, error) {
 
 	if user != nil {
 		if err := u.hasher.Compare(user.Password, input.Password); err == nil {
-			token, refreshToken, err := u.encrypter.Encrypt(map[string]string{
+			if !user.ConfirmedEmail {
+				return &Output{
+					StatusCode: http.StatusForbidden,
+					Error:      "email must be verified",
+				}, nil
+			}
+
+			token, refreshToken, err := u.encrypter.Encrypt(map[string]interface{}{
 				"sub": user.ID,
-			}, 15, true)
+			}, 10)
 			if err != nil {
 				return nil, err
 			}
@@ -102,9 +118,9 @@ func (u UseCase) ForgottenPassword(ctx context.Context, input *ForgottenPassword
 	}
 
 	if user != nil {
-		token, _, err := u.encrypter.Encrypt(map[string]string{
+		token, err := u.encrypter.EncryptTemporary(map[string]interface{}{
 			"sub": user.ID,
-		}, 60, false)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -138,6 +154,16 @@ func (u UseCase) UpdatePassword(ctx context.Context, input *UpdatePasswordInput)
 	user.UpdatePassword(hashedPassword)
 
 	if err := u.repository.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return &Output{
+		StatusCode: http.StatusOK,
+	}, nil
+}
+
+func (u UseCase) ConfirmEmail(ctx context.Context, userID string) (*Output, error) {
+	if err := u.repository.ConfirmEmail(ctx, userID); err != nil {
 		return nil, err
 	}
 

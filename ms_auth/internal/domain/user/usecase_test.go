@@ -26,7 +26,7 @@ func (s *RegisterSuite) InputMock() *RegisterInput {
 }
 
 func (s *RegisterSuite) UserMock() *entity.User {
-	return entity.NewUser("", "any_name", "any_email", "any_password")
+	return entity.NewUser("any_id", "any_name", "any_email", "any_password")
 }
 
 func (s *RegisterSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
@@ -38,6 +38,7 @@ func (s *RegisterSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -57,6 +58,7 @@ func (s *RegisterSuite) TestGivenAnEmailRegistered_ShouldReturnError() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -82,6 +84,7 @@ func (s *RegisterSuite) TestGivenAnErrorInHasherGeneration_ShouldReturnError() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -91,6 +94,36 @@ func (s *RegisterSuite) TestGivenAnErrorInHasherGeneration_ShouldReturnError() {
 
 	repositoryMock.AssertExpectations(s.T())
 	hasherMock.AssertExpectations(s.T())
+}
+
+func (s *RegisterSuite) TestGivenAnErrorOnEncryptTemporary_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(nil, nil)
+
+	hasherMock := __mock__.HasherMock{}
+	hasherMock.On("Generate", "any_password").Return("hashed_password", nil)
+
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("EncryptTemporary", map[string]interface{}{
+		"sub": s.UserMock().ID,
+	}).Return("", errors.New("any_error"))
+
+	sut := NewUseCase(
+		&hasherMock,
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&encrypter,
+		&__mock__.IDGeneratorMock{},
+	)
+
+	output, err := sut.Register(context.Background(), s.InputMock())
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+	hasherMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
 }
 
 func (s *RegisterSuite) TestGivenAnErrorOnStoreRepository_ShouldReturnError() {
@@ -104,11 +137,17 @@ func (s *RegisterSuite) TestGivenAnErrorOnStoreRepository_ShouldReturnError() {
 	hasherMock := __mock__.HasherMock{}
 	hasherMock.On("Generate", "any_password").Return("hashed_password", nil)
 
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("EncryptTemporary", map[string]interface{}{
+		"sub": userMock.ID,
+	}).Return("any_token", nil)
+
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
-		&__mock__.Encrypter{},
+		&encrypter,
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -118,6 +157,7 @@ func (s *RegisterSuite) TestGivenAnErrorOnStoreRepository_ShouldReturnError() {
 
 	repositoryMock.AssertExpectations(s.T())
 	hasherMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
 }
 
 func (s *RegisterSuite) TestSuccessScenario() {
@@ -131,11 +171,17 @@ func (s *RegisterSuite) TestSuccessScenario() {
 	hasherMock := __mock__.HasherMock{}
 	hasherMock.On("Generate", "any_password").Return("hashed_password", nil)
 
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("EncryptTemporary", map[string]interface{}{
+		"sub": userMock.ID,
+	}).Return("any_token", nil)
+
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
-		&__mock__.Encrypter{},
+		&encrypter,
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Register(context.Background(), s.InputMock())
@@ -148,6 +194,7 @@ func (s *RegisterSuite) TestSuccessScenario() {
 
 	repositoryMock.AssertExpectations(s.T())
 	hasherMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
 }
 
 func TestRegisterSuite(t *testing.T) {
@@ -166,7 +213,10 @@ func (s *AuthSuite) InputMock() *AuthInput {
 }
 
 func (s *AuthSuite) UserMock() *entity.User {
-	return entity.NewUser("any_id", "any_name", "any_email", "hashed_password")
+	u := entity.NewUser("any_id", "any_name", "any_email", "hashed_password")
+	u.ConfirmedEmail = true
+
+	return u
 }
 
 func (s *AuthSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
@@ -178,6 +228,7 @@ func (s *AuthSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Auth(context.Background(), s.InputMock())
@@ -197,6 +248,7 @@ func (s *AuthSuite) TestGivenAnErrorEmailNotRegister_ShouldReturnError() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Auth(context.Background(), s.InputMock())
@@ -222,6 +274,7 @@ func (s *AuthSuite) TestGivenAnInvalidPassword_ShouldReturnError() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Auth(context.Background(), s.InputMock())
@@ -244,15 +297,16 @@ func (s *AuthSuite) TestGivenAnErrorInEncrypter_ShouldReturnError() {
 	hasherMock.On("Compare", "hashed_password", "any_password").Return(nil)
 
 	encrypter := __mock__.Encrypter{}
-	encrypter.On("Encrypt", map[string]string{
+	encrypter.On("Encrypt", map[string]interface{}{
 		"sub": "any_id",
-	}, uint(15), true).Return("", "", errors.New("any_error"))
+	}, uint(10)).Return("", "", errors.New("any_error"))
 
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&encrypter,
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Auth(context.Background(), s.InputMock())
@@ -273,15 +327,16 @@ func (s *AuthSuite) TestGivenValidInput_ShouldReturnAccessTokenAndRefreshToken()
 	hasherMock.On("Compare", "hashed_password", "any_password").Return(nil)
 
 	encrypter := __mock__.Encrypter{}
-	encrypter.On("Encrypt", map[string]string{
+	encrypter.On("Encrypt", map[string]interface{}{
 		"sub": "any_id",
-	}, uint(15), true).Return("any_access_token", "any_refresh_token", nil)
+	}, uint(10)).Return("any_access_token", "any_refresh_token", nil)
 
 	sut := NewUseCase(
 		&hasherMock,
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&encrypter,
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.Auth(context.Background(), s.InputMock())
@@ -327,6 +382,7 @@ func (s *ForgottenPasswordSuite) TestGivenAnErrorOnFindByEmail_ShouldReturnError
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.ForgottenPassword(context.Background(), s.InputMock())
@@ -342,15 +398,14 @@ func (s *ForgottenPasswordSuite) TestGivenAnErrorInEncrypter_ShouldReturnError()
 	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
 
 	encrypter := __mock__.Encrypter{}
-	encrypter.On("Encrypt", map[string]string{
-		"sub": "any_id",
-	}, uint(60), false).Return("", "", errors.New("any_error"))
+	encrypter.On("EncryptTemporary", map[string]interface{}{"sub": "any_id"}).Return("", errors.New("any_error"))
 
 	sut := NewUseCase(
 		&__mock__.HasherMock{},
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&encrypter,
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.ForgottenPassword(context.Background(), s.InputMock())
@@ -367,9 +422,7 @@ func (s *ForgottenPasswordSuite) TestGivenAnErrorInForgottenPassword_ShouldRetur
 	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
 
 	encrypter := __mock__.Encrypter{}
-	encrypter.On("Encrypt", map[string]string{
-		"sub": "any_id",
-	}, uint(60), false).Return("any_token", "", nil)
+	encrypter.On("EncryptTemporary", map[string]interface{}{"sub": "any_id"}).Return("any_token", nil)
 
 	emailNotificationMock := __mock__.EmailNotificationMock{}
 	emailNotificationMock.On("ForgottenPassword", context.Background(), s.UserMock(), "any_token").Return(errors.New("any_error"))
@@ -379,6 +432,7 @@ func (s *ForgottenPasswordSuite) TestGivenAnErrorInForgottenPassword_ShouldRetur
 		&repositoryMock,
 		&emailNotificationMock,
 		&encrypter,
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.ForgottenPassword(context.Background(), s.InputMock())
@@ -395,9 +449,7 @@ func (s *ForgottenPasswordSuite) TestGivenNoError_ShouldReturnGenericResponse() 
 	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
 
 	encrypter := __mock__.Encrypter{}
-	encrypter.On("Encrypt", map[string]string{
-		"sub": "any_id",
-	}, uint(60), false).Return("any_token", "", nil)
+	encrypter.On("EncryptTemporary", map[string]interface{}{"sub": "any_id"}).Return("any_token", nil)
 
 	emailNotificationMock := __mock__.EmailNotificationMock{}
 	emailNotificationMock.On("ForgottenPassword", context.Background(), s.UserMock(), "any_token").Return(nil)
@@ -407,6 +459,7 @@ func (s *ForgottenPasswordSuite) TestGivenNoError_ShouldReturnGenericResponse() 
 		&repositoryMock,
 		&emailNotificationMock,
 		&encrypter,
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.ForgottenPassword(context.Background(), s.InputMock())
@@ -449,6 +502,7 @@ func (s *UpdatePasswordSuite) TestGivenAnErrorOnFind_ShouldReturnError() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
@@ -468,6 +522,7 @@ func (s *UpdatePasswordSuite) TestGivenAnNilUser_ShouldReturnError() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
@@ -490,6 +545,7 @@ func (s *UpdatePasswordSuite) TestGivenAnErrorInHasherGeneration_ShouldReturnErr
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
@@ -516,6 +572,7 @@ func (s *UpdatePasswordSuite) TestGivenAnErrorInUpdate_ShouldReturnError() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
@@ -542,6 +599,7 @@ func (s *UpdatePasswordSuite) TestShouldReturnOKOnSuccess() {
 		&repositoryMock,
 		&__mock__.EmailNotificationMock{},
 		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
 	)
 
 	output, err := sut.UpdatePassword(context.Background(), s.InputMock())
@@ -557,4 +615,54 @@ func (s *UpdatePasswordSuite) TestShouldReturnOKOnSuccess() {
 
 func TestUpdatePasswordSuite(t *testing.T) {
 	suite.Run(t, new(UpdatePasswordSuite))
+}
+
+type ConfirmEmailSuite struct {
+	suite.Suite
+}
+
+func (s *ConfirmEmailSuite) TestShouldReturnErrorOnFail() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("ConfirmEmail", context.Background(), "any_id").Return(errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
+	)
+
+	output, err := sut.ConfirmEmail(context.Background(), "any_id")
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+}
+
+func (s *ConfirmEmailSuite) TestShouldReturnOKOnSuccess() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("ConfirmEmail", context.Background(), "any_id").Return(nil)
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
+	)
+
+	output, err := sut.ConfirmEmail(context.Background(), "any_id")
+
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), Output{
+		StatusCode: http.StatusOK,
+	}, *output)
+
+	repositoryMock.AssertExpectations(s.T())
+}
+
+func TestConfirmEmailSuite(t *testing.T) {
+	suite.Run(t, new(ConfirmEmailSuite))
 }

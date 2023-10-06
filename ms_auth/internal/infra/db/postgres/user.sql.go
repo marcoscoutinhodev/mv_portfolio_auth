@@ -9,8 +9,17 @@ import (
 	"context"
 )
 
+const confirmEmail = `-- name: ConfirmEmail :exec
+UPDATE users u SET confirmed_email = true WHERE u.id = $1
+`
+
+func (q *Queries) ConfirmEmail(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, confirmEmail, id)
+	return err
+}
+
 const find = `-- name: Find :one
-SELECT id, name, email, password FROM users u WHERE u.id = $1
+SELECT id, name, email, password, confirmed_email FROM users u WHERE u.id = $1
 `
 
 func (q *Queries) Find(ctx context.Context, id string) (User, error) {
@@ -21,12 +30,13 @@ func (q *Queries) Find(ctx context.Context, id string) (User, error) {
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.ConfirmedEmail,
 	)
 	return i, err
 }
 
 const findByEmail = `-- name: FindByEmail :one
-SELECT id, name, email, password FROM users u WHERE u.email = $1
+SELECT id, name, email, password, confirmed_email FROM users u WHERE u.email = $1
 `
 
 func (q *Queries) FindByEmail(ctx context.Context, email string) (User, error) {
@@ -37,6 +47,7 @@ func (q *Queries) FindByEmail(ctx context.Context, email string) (User, error) {
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.ConfirmedEmail,
 	)
 	return i, err
 }

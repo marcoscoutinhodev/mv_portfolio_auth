@@ -1,10 +1,11 @@
 package entity
 
 type User struct {
-	ID       string
-	Name     string
-	Email    string
-	Password string
+	ID             string
+	Name           string
+	Email          string
+	Password       string
+	ConfirmedEmail bool
 }
 
 func NewUser(id, name, email, password string) *User {

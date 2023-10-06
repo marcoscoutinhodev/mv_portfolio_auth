@@ -37,6 +37,7 @@ type UseCaseInterface interface {
 	Auth(ctx context.Context, input *AuthInput) (*Output, error)
 	ForgottenPassword(ctx context.Context, input *ForgottenPasswordInput) (*Output, error)
 	UpdatePassword(ctx context.Context, input *UpdatePasswordInput) (*Output, error)
+	ConfirmEmail(ctx context.Context, userID string) (*Output, error)
 }
 
 type RepositoryInterface interface {
@@ -44,4 +45,5 @@ type RepositoryInterface interface {
 	FindByEmail(ctx context.Context, email string) (*entity.User, error)
 	Store(ctx context.Context, user *entity.User, fn func() error) error
 	Update(ctx context.Context, user *entity.User) error
+	ConfirmEmail(ctx context.Context, userID string) error
 }

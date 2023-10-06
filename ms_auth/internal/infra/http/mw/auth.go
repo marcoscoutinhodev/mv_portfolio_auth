@@ -21,7 +21,7 @@ func NewAuthMiddleware(encrypter adapter.EncrypterInterface) *AuthMiddleware {
 	}
 }
 
-func (m AuthMiddleware) Authorization(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (m AuthMiddleware) AuthorizationTemporary(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	accessToken := r.Header.Get("x_access_token")
 	if accessToken == "" {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -48,7 +48,7 @@ func (m AuthMiddleware) Authorization(w http.ResponseWriter, r *http.Request, ne
 		return
 	}
 
-	payload, err := m.encrypter.Decrypt(parts[1])
+	payload, err := m.encrypter.DecryptTemporary(parts[1])
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -57,9 +57,6 @@ func (m AuthMiddleware) Authorization(w http.ResponseWriter, r *http.Request, ne
 		return
 	}
 
-	p := payload["payload"].(map[string]interface{})
-	userID := p["sub"].(string)
-
-	req := r.WithContext(context.WithValue(r.Context(), UserIDKey{}, userID))
+	req := r.WithContext(context.WithValue(r.Context(), UserIDKey{}, payload["sub"]))
 	next(w, req)
 }

@@ -2,7 +2,6 @@ package adapter
 
 import (
 	"crypto/rsa"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -12,6 +11,7 @@ import (
 type Encrypter struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
+	secretKey  string
 }
 
 func NewEncrypter() *Encrypter {
@@ -27,6 +27,7 @@ func NewEncrypter() *Encrypter {
 	return &Encrypter{
 		privateKey: privateKey,
 		publicKey:  publicKey,
+		secretKey:  config.JWT_SECRET_KEY,
 	}
 }
 
@@ -39,36 +40,30 @@ func (e Encrypter) generate(claims jwt.Claims) (string, error) {
 	return token, nil
 }
 
-func (e Encrypter) Encrypt(payload interface{}, minutesToExpire uint, rt bool) (token string, refreshToken string, err error) {
-	claims := &jwt.MapClaims{
-		"payload": payload,
-		"registeredClaims": jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(minutesToExpire) * time.Minute)),
-		},
+func (e Encrypter) mapClaims(payload map[string]interface{}, minutesToExpireToken uint) *jwt.MapClaims {
+	claims := jwt.MapClaims{}
+	for k, v := range payload {
+		claims[k] = v
 	}
+	claims["exp"] = jwt.NewNumericDate(time.Now().Add(time.Duration(minutesToExpireToken) * time.Minute))
 
+	return &claims
+}
+
+func (e Encrypter) Encrypt(payload map[string]interface{}, minutesToExpireToken uint) (token string, refreshToken string, err error) {
+	claims := e.mapClaims(payload, minutesToExpireToken)
 	token, err = e.generate(claims)
 	if err != nil {
 		return "", "", err
 	}
 
-	if rt {
-		claims := &jwt.MapClaims{
-			"sub": token,
-			"registeredClaims": jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(minutesToExpire*6) * time.Minute)),
-			},
-		}
-
-		refreshToken, err = e.generate(claims)
-		if err != nil {
-			return "", "", err
-		}
-
-		return token, refreshToken, nil
+	claims = e.mapClaims(payload, minutesToExpireToken*12)
+	refreshToken, err = e.generate(claims)
+	if err != nil {
+		return "", "", err
 	}
 
-	return token, "", nil
+	return token, refreshToken, nil
 }
 
 func (e Encrypter) Decrypt(token string) (payload map[string]interface{}, err error) {
@@ -76,7 +71,28 @@ func (e Encrypter) Decrypt(token string) (payload map[string]interface{}, err er
 	if _, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {
 		return e.publicKey, nil
 	}); err != nil {
-		fmt.Println("to aq:", err)
+		return nil, err
+	}
+
+	return claims, err
+}
+
+func (e Encrypter) EncryptTemporary(payload map[string]interface{}) (string, error) {
+	claims := e.mapClaims(payload, 60)
+
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(e.secretKey))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func (e Encrypter) DecryptTemporary(token string) (payload map[string]interface{}, err error) {
+	claims := jwt.MapClaims{}
+	if _, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {
+		return []byte(e.secretKey), nil
+	}); err != nil {
 		return nil, err
 	}
 

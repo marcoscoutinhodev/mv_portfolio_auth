@@ -4,11 +4,14 @@
 
 package postgres
 
-import ()
+import (
+	"database/sql"
+)
 
 type User struct {
-	ID       string
-	Name     string
-	Email    string
-	Password string
+	ID             string
+	Name           string
+	Email          string
+	Password       string
+	ConfirmedEmail sql.NullBool
 }

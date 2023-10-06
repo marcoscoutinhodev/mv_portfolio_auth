@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/google/uuid"
 	"github.com/marcoscoutinhodev/ms_auth/internal/entity"
 	"github.com/marcoscoutinhodev/ms_auth/internal/infra/db/postgres"
 )
@@ -35,7 +34,7 @@ func (r Repository) Find(ctx context.Context, id string) (*entity.User, error) {
 }
 
 func (r Repository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
-	user, err := r.queries.FindByEmail(ctx, email)
+	u, err := r.queries.FindByEmail(ctx, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -44,7 +43,9 @@ func (r Repository) FindByEmail(ctx context.Context, email string) (*entity.User
 		return nil, err
 	}
 
-	return entity.NewUser(user.ID, user.Name, user.Email, user.Password), nil
+	user := entity.NewUser(u.ID, u.Name, u.Email, u.Password)
+	user.ConfirmedEmail = u.ConfirmedEmail.Bool
+	return user, nil
 }
 
 func (r Repository) Store(ctx context.Context, user *entity.User, fn func() error) error {
@@ -57,7 +58,7 @@ func (r Repository) Store(ctx context.Context, user *entity.User, fn func() erro
 
 	qtx := r.queries.WithTx(tx)
 	if err := qtx.Store(ctx, postgres.StoreParams{
-		ID:       uuid.NewString(),
+		ID:       user.ID,
 		Name:     user.Name,
 		Email:    user.Email,
 		Password: user.Password,
@@ -83,6 +84,14 @@ func (r Repository) Update(ctx context.Context, user *entity.User) error {
 		Email:    user.Email,
 		Password: user.Password,
 	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r Repository) ConfirmEmail(ctx context.Context, userID string) error {
+	if err := r.queries.ConfirmEmail(ctx, userID); err != nil {
 		return err
 	}
 

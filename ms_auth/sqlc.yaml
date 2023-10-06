@@ -2,12 +2,12 @@ version: '2'
 
 sql:
   - engine: "postgresql"
-    queries: "internal/infra/repository/query"
+    queries: "internal/infra/db/query"
     schema: "/migration"
     gen:
       go:
         package: "postgres"
-        out: "internal/infra/repository/postgres"
+        out: "internal/infra/db/postgres"
         overrides:
           - db_type: "pg_catalog.numeric"
             go_type: "float64"
