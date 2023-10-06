@@ -76,6 +76,9 @@ func main() {
 		r.Post("/confirm-email", func(w http.ResponseWriter, r *http.Request) {
 			mw.AuthorizationTemporary(w, r, auth.ConfirmEmail)
 		})
+		r.Post("/refresh-token", func(w http.ResponseWriter, r *http.Request) {
+			mw.Authorization(w, r, auth.NewAccessToken)
+		})
 	})
 
 	if err := http.ListenAndServe(config.SERVER_PORT, mux); err != nil {

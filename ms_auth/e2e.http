@@ -28,7 +28,7 @@ content-Type: 'application/json'
 ###
 POST http://localhost:8080/auth/update-password
 content-Type: 'application/json'
-x_access_token: Bearer {TOKEN_HERE}
+x_access_token: Bearer {TOKEN}
 
 {
   "password": "P@ssw0rd"
@@ -37,4 +37,9 @@ x_access_token: Bearer {TOKEN_HERE}
 ###
 POST http://localhost:8080/auth/confirm-email
 content-Type: 'application/json'
-x_access_token: Bearer {TOKEN_HERE}
+x_access_token: Bearer {TOKEN}
+
+###
+POST http://localhost:8080/auth/refresh-token
+content-Type: 'application/json'
+x_access_token: Bearer {TOKEN}

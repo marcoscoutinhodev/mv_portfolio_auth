@@ -666,3 +666,61 @@ func (s *ConfirmEmailSuite) TestShouldReturnOKOnSuccess() {
 func TestConfirmEmailSuite(t *testing.T) {
 	suite.Run(t, new(ConfirmEmailSuite))
 }
+
+type NewAccessTokenSuite struct {
+	suite.Suite
+}
+
+func (s *NewAccessTokenSuite) TestShouldReturnErrorOnFail() {
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("Encrypt", map[string]interface{}{
+		"sub": "any_id",
+	}, uint(10)).Return("", "", errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&__mock__.RepositoryMock{},
+		&__mock__.EmailNotificationMock{},
+		&encrypter,
+		&__mock__.IDGeneratorMock{},
+	)
+
+	output, err := sut.NewAccessToken(context.Background(), "any_id")
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	encrypter.AssertExpectations(s.T())
+}
+
+func (s *NewAccessTokenSuite) TestShouldReturnOKOnSuccess() {
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("Encrypt", map[string]interface{}{
+		"sub": "any_id",
+	}, uint(10)).Return("any_access_token", "any_refresh_token", nil)
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&__mock__.RepositoryMock{},
+		&__mock__.EmailNotificationMock{},
+		&encrypter,
+		&__mock__.IDGeneratorMock{},
+	)
+
+	output, err := sut.NewAccessToken(context.Background(), "any_id")
+
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), Output{
+		StatusCode: http.StatusOK,
+		Data: map[string]string{
+			"accessToken":  "any_access_token",
+			"refreshToken": "any_refresh_token",
+		},
+	}, *output)
+
+	encrypter.AssertExpectations(s.T())
+}
+
+func TestNewAccessTokenSuite(t *testing.T) {
+	suite.Run(t, new(NewAccessTokenSuite))
+}

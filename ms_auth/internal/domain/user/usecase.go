@@ -171,3 +171,20 @@ func (u UseCase) ConfirmEmail(ctx context.Context, userID string) (*Output, erro
 		StatusCode: http.StatusOK,
 	}, nil
 }
+
+func (u UseCase) NewAccessToken(ctx context.Context, userID string) (*Output, error) {
+	token, refreshToken, err := u.encrypter.Encrypt(map[string]interface{}{
+		"sub": userID,
+	}, 10)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Output{
+		StatusCode: http.StatusOK,
+		Data: map[string]string{
+			"accessToken":  token,
+			"refreshToken": refreshToken,
+		},
+	}, nil
+}

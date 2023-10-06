@@ -21,42 +21,55 @@ func NewAuthMiddleware(encrypter adapter.EncrypterInterface) *AuthMiddleware {
 	}
 }
 
-func (m AuthMiddleware) AuthorizationTemporary(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	accessToken := r.Header.Get("x_access_token")
-	if accessToken == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"error": "unauthorized",
-		})
-		return
+func (m AuthMiddleware) preValidation(token string) (bool, string) {
+	if token == "" {
+		return false, ""
 	}
 
-	parts := strings.Split(accessToken, " ")
+	parts := strings.Split(token, " ")
 	if len(parts) != 2 {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"error": "unauthorized",
-		})
-		return
+		return false, ""
 	}
 
 	if parts[0] != "Bearer" {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"error": "unauthorized",
-		})
-		return
+		return false, ""
 	}
 
-	payload, err := m.encrypter.DecryptTemporary(parts[1])
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"error": "unauthorized",
-		})
-		return
+	return true, parts[1]
+}
+
+func (m AuthMiddleware) Authorization(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	accessToken := r.Header.Get("x_access_token")
+
+	if isValid, token := m.preValidation(accessToken); isValid {
+		payload, err := m.encrypter.Decrypt(token)
+		if err == nil {
+			req := r.WithContext(context.WithValue(r.Context(), UserIDKey{}, payload["sub"]))
+			next(w, req)
+			return
+		}
 	}
 
-	req := r.WithContext(context.WithValue(r.Context(), UserIDKey{}, payload["sub"]))
-	next(w, req)
+	w.WriteHeader(http.StatusUnauthorized)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error": "unauthorized",
+	})
+}
+
+func (m AuthMiddleware) AuthorizationTemporary(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	accessToken := r.Header.Get("x_access_token")
+
+	if isValid, token := m.preValidation(accessToken); isValid {
+		payload, err := m.encrypter.DecryptTemporary(token)
+		if err == nil {
+			req := r.WithContext(context.WithValue(r.Context(), UserIDKey{}, payload["sub"]))
+			next(w, req)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusUnauthorized)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error": "unauthorized",
+	})
 }

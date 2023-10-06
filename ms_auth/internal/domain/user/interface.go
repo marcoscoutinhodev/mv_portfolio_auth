@@ -38,6 +38,7 @@ type UseCaseInterface interface {
 	ForgottenPassword(ctx context.Context, input *ForgottenPasswordInput) (*Output, error)
 	UpdatePassword(ctx context.Context, input *UpdatePasswordInput) (*Output, error)
 	ConfirmEmail(ctx context.Context, userID string) (*Output, error)
+	NewAccessToken(ctx context.Context, userID string) (*Output, error)
 }
 
 type RepositoryInterface interface {
