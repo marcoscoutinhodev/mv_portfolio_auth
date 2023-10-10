@@ -2,4 +2,5 @@
 .docker/
 .env
 
-rabbitmq*
+rabbitmq.conf
+rabbitmq_definitions.json

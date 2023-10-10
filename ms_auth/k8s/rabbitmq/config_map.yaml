@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-ms-auth
+data:
+  rabbitmq.conf: |
+    loopback_users.guest = false
+    log.console = true
+    load_definitions = /etc/rabbitmq/definitions.json
+  rabbitmq-definitions.json: |
+    {
+      "users": [
+        {
+          "name": "admin",
+          "password_hash": "VVIb3jaHvLAQ+6enawNHXaeP4AMVxv2KmWaWOHM0TcT0fYKO",
+          "hashing_algorithm": "rabbit_password_hashing_sha256",
+          "tags": [
+            "administrator"
+          ],
+          "limits": {}
+        }
+      ],
+      "vhosts": [
+        {
+          "name": "/"
+        }
+      ],
+      "permissions": [
+        {
+          "user": "admin",
+          "vhost": "/",
+          "configure": ".*",
+          "write": ".*",
+          "read": ".*"
+        }
+      ],
+      "queues": [
+        {
+          "name": "REGISTER_NOTIFICATION",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "classic"
+          }
+        },
+        {
+          "name": "FORGOT_PASSWORD_NOTIFICATION",
+          "vhost": "/",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {
+            "x-queue-type": "classic"
+          }
+        }
+      ],
+      "exchanges": [
+        {
+          "name": "amq.direct",
+          "vhost": "/",
+          "type": "direct",
+          "durable": true,
+          "auto_delete": false,
+          "internal": false,
+          "arguments": {}
+        },
+        {
+          "name": "amq.direct",
+          "vhost": "/",
+          "type": "direct",
+          "durable": true,
+          "auto_delete": false,
+          "internal": false,
+          "arguments": {}
+        }
+      ],
+      "bindings": [
+        {
+          "source": "amq.direct",
+          "vhost": "/",
+          "destination": "REGISTER_NOTIFICATION",
+          "destination_type": "queue",
+          "routing_key": "REGISTER_NOTIFICATION",
+          "arguments": {}
+        },
+        {
+          "source": "amq.direct",
+          "vhost": "/",
+          "destination": "FORGOT_PASSWORD_NOTIFICATION",
+          "destination_type": "queue",
+          "routing_key": "FORGOT_PASSWORD_NOTIFICATION",
+          "arguments": {}
+        }
+      ]
+    }

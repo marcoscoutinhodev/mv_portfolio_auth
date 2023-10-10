@@ -2,16 +2,12 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 	"github.com/marcoscoutinhodev/ms_auth/config"
@@ -20,31 +16,6 @@ import (
 
 func init() {
 	config.Load()
-
-	db, err := sql.Open(config.DB_DRIVER, config.DB_URI)
-	if err != nil {
-		panic(err)
-	}
-
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	if err != nil {
-		panic(err)
-	}
-
-	filePath, err := filepath.Abs("migration")
-	if err != nil {
-		panic(err)
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", filePath),
-		config.DB_NAME, driver,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	m.Up()
 }
 
 func main() {

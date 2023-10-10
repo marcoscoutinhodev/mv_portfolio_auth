@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-ms-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-ms-auth
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-ms-auth
+    spec:
+      containers:
+      - name: rabbitmq-ms-auth
+        image: rabbitmq:3.13-rc-management-alpine
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        envFrom:
+        - configMapRef:
+            name: rabbitmq-ms-auth
+        volumeMounts:
+          - name: rabbitmq-ms-auth-storage
+            mountPath: /var/lib/rabbitmq/
+          - name: rabbitm-config
+            mountPath: /etc/rabbitmq/conf.d/
+          - name: rabbitmq-definitions
+            mountPath: /etc/rabbitmq/
+      volumes:
+        - name: rabbitmq-ms-auth-storage
+          persistentVolumeClaim:
+            claimName: rabbitmq-ms-auth-pv-claim
+        - name: rabbitm-config
+          configMap:
+            name: rabbitmq-ms-auth
+            items:
+              - key: rabbitmq.conf
+                path: 10-defaults.conf
+        - name: rabbitmq-definitions
+          configMap:
+            name: rabbitmq-ms-auth
+            items:
+              - key: rabbitmq-definitions.json
+                path: definitions.json

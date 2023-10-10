@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ms-auth
+data:
+  SERVER_PORT: ":8080"
+  DB_MAX_IDLE_CONNS: "100"

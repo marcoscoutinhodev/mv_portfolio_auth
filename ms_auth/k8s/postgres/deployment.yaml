@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-ms-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-ms-auth
+  template:
+    metadata:
+      labels:
+        app: postgres-ms-auth
+    spec:
+      containers:
+      - name: postgres-ms-auth
+        image: postgres:16
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - secretRef:
+            name: postgres-ms-auth
+        - configMapRef:
+            name: postgres-ms-auth
+        volumeMounts:
+          - name: postgres-ms-auth-storage
+            mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-ms-auth-storage
+          persistentVolumeClaim:
+            claimName: postgres-ms-auth-pv-claim

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-ms-auth
+spec:
+  selector:
+    app: postgres-ms-auth
+  ports:
+    - port: 5432
+  clusterIP: None

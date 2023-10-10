@@ -24,10 +24,8 @@ var (
 )
 
 func Load() {
-	err := godotenv.Load()
-	if err != nil {
-		panic("Error loading .env file")
-	}
+	// there is no need to check the error because in PRD the application does not use the .env file
+	godotenv.Load()
 
 	var errors []string
 
