@@ -35,6 +35,11 @@ x_access_token: Bearer {TOKEN}
 }
 
 ###
+POST http://localhost:8080/auth/email-confirmation-request
+content-Type: 'application/json'
+email: lorem@ipsum.com
+
+###
 POST http://localhost:8080/auth/confirm-email
 content-Type: 'application/json'
 x_access_token: Bearer {TOKEN}

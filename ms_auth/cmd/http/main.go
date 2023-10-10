@@ -44,6 +44,7 @@ func main() {
 		r.Post("/update-password", func(w http.ResponseWriter, r *http.Request) {
 			mw.AuthorizationTemporary(w, r, auth.UpdatePassword)
 		})
+		r.Post("/email-confirmation-request", auth.EmailConfirmationRequest)
 		r.Post("/confirm-email", func(w http.ResponseWriter, r *http.Request) {
 			mw.AuthorizationTemporary(w, r, auth.ConfirmEmail)
 		})

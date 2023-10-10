@@ -617,6 +617,127 @@ func TestUpdatePasswordSuite(t *testing.T) {
 	suite.Run(t, new(UpdatePasswordSuite))
 }
 
+type EmailConfirmationRequest struct {
+	suite.Suite
+}
+
+func (s *EmailConfirmationRequest) UserMock() *entity.User {
+	return entity.NewUser("any_id", "any_name", "any_email", "hashed_password_from_db")
+}
+
+func (s *EmailConfirmationRequest) TestGivenAnErrorOnFindByEmail_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(nil, errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&__mock__.Encrypter{},
+		&__mock__.IDGeneratorMock{},
+	)
+
+	output, err := sut.EmailConfirmationRequest(context.Background(), "any_email")
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+}
+
+func (s *EmailConfirmationRequest) TestGivenAnErrorOnEncryptTemporary_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
+
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("EncryptTemporary", map[string]interface{}{
+		"sub": s.UserMock().ID,
+	}).Return("", errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&__mock__.EmailNotificationMock{},
+		&encrypter,
+		&__mock__.IDGeneratorMock{},
+	)
+
+	output, err := sut.EmailConfirmationRequest(context.Background(), "any_email")
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
+}
+
+func (s *EmailConfirmationRequest) TestGivenAnErrorOnEmailNotificationRegister_ShouldReturnError() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
+
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("EncryptTemporary", map[string]interface{}{
+		"sub": s.UserMock().ID,
+	}).Return("any_token", nil)
+
+	emailNotificationMock := __mock__.EmailNotificationMock{}
+	emailNotificationMock.On("Register", context.Background(), s.UserMock(), "any_token").Return(errors.New("any_error"))
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&emailNotificationMock,
+		&encrypter,
+		&__mock__.IDGeneratorMock{},
+	)
+
+	output, err := sut.EmailConfirmationRequest(context.Background(), "any_email")
+
+	assert.Equal(s.T(), errors.New("any_error"), err)
+	assert.Nil(s.T(), output)
+
+	repositoryMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
+	emailNotificationMock.AssertExpectations(s.T())
+}
+
+func (s *EmailConfirmationRequest) TestShouldReturnOKOnSuccess() {
+	repositoryMock := __mock__.RepositoryMock{}
+	repositoryMock.On("FindByEmail", context.Background(), "any_email").Return(s.UserMock(), nil)
+
+	encrypter := __mock__.Encrypter{}
+	encrypter.On("EncryptTemporary", map[string]interface{}{
+		"sub": s.UserMock().ID,
+	}).Return("any_token", nil)
+
+	emailNotificationMock := __mock__.EmailNotificationMock{}
+	emailNotificationMock.On("Register", context.Background(), s.UserMock(), "any_token").Return(nil)
+
+	sut := NewUseCase(
+		&__mock__.HasherMock{},
+		&repositoryMock,
+		&emailNotificationMock,
+		&encrypter,
+		&__mock__.IDGeneratorMock{},
+	)
+
+	output, err := sut.EmailConfirmationRequest(context.Background(), "any_email")
+
+	assert.Equal(s.T(), Output{
+		StatusCode: http.StatusOK,
+		Data:       "if the email provided is found, you will receive instructions to confirm your email in your inbox",
+	}, *output)
+	assert.Nil(s.T(), err)
+
+	repositoryMock.AssertExpectations(s.T())
+	encrypter.AssertExpectations(s.T())
+	emailNotificationMock.AssertExpectations(s.T())
+}
+
+func TestEmailConfirmationRequest(t *testing.T) {
+	suite.Run(t, new(EmailConfirmationRequest))
+}
+
 type ConfirmEmailSuite struct {
 	suite.Suite
 }

@@ -162,6 +162,31 @@ func (u UseCase) UpdatePassword(ctx context.Context, input *UpdatePasswordInput)
 	}, nil
 }
 
+func (u UseCase) EmailConfirmationRequest(ctx context.Context, email string) (*Output, error) {
+	user, err := u.repository.FindByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	if user != nil {
+		token, err := u.encrypter.EncryptTemporary(map[string]interface{}{
+			"sub": user.ID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if err := u.emailNotification.Register(ctx, user, token); err != nil {
+			return nil, err
+		}
+	}
+
+	return &Output{
+		StatusCode: http.StatusOK,
+		Data:       "if the email provided is found, you will receive instructions to confirm your email in your inbox",
+	}, nil
+}
+
 func (u UseCase) ConfirmEmail(ctx context.Context, userID string) (*Output, error) {
 	if err := u.repository.ConfirmEmail(ctx, userID); err != nil {
 		return nil, err

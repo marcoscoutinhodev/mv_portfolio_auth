@@ -42,7 +42,7 @@ func (a Auth) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := mail.ParseAddress(input.Email); err != nil {
-		errors = append(errors, "invalid email")
+		errors = append(errors, "invalid email format")
 	}
 
 	if !pkg.PasswordValidator(input.Password) {
@@ -182,6 +182,34 @@ func (a Auth) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	input.UserID = r.Context().Value(mw.UserIDKey{}).(string)
 
 	output, err := a.usecase.UpdatePassword(r.Context(), &input)
+	if err != nil {
+		fmt.Println("internal server error:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "internal server error",
+		})
+		return
+	}
+
+	w.WriteHeader(output.StatusCode)
+	json.NewEncoder(w).Encode(output)
+}
+
+func (a Auth) EmailConfirmationRequest(w http.ResponseWriter, r *http.Request) {
+	email := r.Header.Get("email")
+	if _, err := mail.ParseAddress(email); err != nil {
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "invalid email format",
+			})
+			return
+		}
+	}
+
+	email = strings.ToLower(email)
+
+	output, err := a.usecase.EmailConfirmationRequest(r.Context(), email)
 	if err != nil {
 		fmt.Println("internal server error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
