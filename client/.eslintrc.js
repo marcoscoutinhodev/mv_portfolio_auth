@@ -8,5 +8,6 @@ module.exports = {
   ],
   rules: {
     'vuejs-accessibility/form-control-has-label': 'off',
+    'vue/max-len': 'off',
   },
 };
