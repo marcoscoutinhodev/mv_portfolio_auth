@@ -98,6 +98,7 @@ func (u UseCase) Auth(ctx context.Context, input *AuthInput) (*Output, error) {
 			return &Output{
 				StatusCode: http.StatusOK,
 				Data: map[string]string{
+					"name":         user.Name,
 					"accessToken":  token,
 					"refreshToken": refreshToken,
 				},

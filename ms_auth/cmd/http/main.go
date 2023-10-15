@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 	"github.com/marcoscoutinhodev/ms_auth/config"
@@ -36,6 +37,11 @@ func main() {
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Logger)
+	mux.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedHeaders: []string{"*"},
+	}))
 
 	mux.Route("/auth", func(r chi.Router) {
 		r.Post("/signup", auth.SignUp)

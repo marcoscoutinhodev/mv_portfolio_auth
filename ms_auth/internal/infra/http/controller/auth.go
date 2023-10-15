@@ -83,20 +83,18 @@ func (a Auth) SignIn(w http.ResponseWriter, r *http.Request) {
 
 	input.Email = strings.ToLower(strings.Join(strings.Fields(input.Email), " "))
 
-	var errors []string
-
 	if _, err := mail.ParseAddress(input.Email); err != nil {
-		errors = append(errors, "poorly formatted email")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "invalid credentials",
+		})
+		return
 	}
 
 	if !pkg.PasswordValidator(input.Password) {
-		errors = append(errors, "poorly formatted password")
-	}
-
-	if len(errors) > 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"error": errors,
+			"error": "invalid credentials",
 		})
 		return
 	}

@@ -345,6 +345,7 @@ func (s *AuthSuite) TestGivenValidInput_ShouldReturnAccessTokenAndRefreshToken()
 	assert.Equal(s.T(), Output{
 		StatusCode: http.StatusOK,
 		Data: map[string]string{
+			"name":         "any_name",
 			"accessToken":  "any_access_token",
 			"refreshToken": "any_refresh_token",
 		},
