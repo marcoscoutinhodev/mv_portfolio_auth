@@ -1,6 +1,7 @@
 /* eslint-disable import/prefer-default-export */
 export const SIGN_IN_ACTION = '[action] signin user';
 export const SIGN_UP_ACTION = '[action] signup user';
+export const FORGOT_PASSWORD_ACTION = '[action] forgot password user';
 
 export const SET_USER_DATA = '[mutations] set user data';
 

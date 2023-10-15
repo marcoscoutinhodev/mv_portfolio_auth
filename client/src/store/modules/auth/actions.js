@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 import environment from '../../../config/environment';
-import { SET_USER_DATA, SIGN_IN_ACTION, SIGN_UP_ACTION } from '../../storeconstants';
+import {
+  SET_USER_DATA, SIGN_IN_ACTION, SIGN_UP_ACTION, FORGOT_PASSWORD_ACTION,
+} from '../../storeconstants';
 
 export default {
   async [SIGN_IN_ACTION](context, payload) {
@@ -35,6 +37,22 @@ export default {
         name: payload.name,
         email: payload.email,
         password: payload.password,
+      }, {
+        validateStatus: () => true,
+      });
+
+      return {
+        status,
+        data,
+      };
+    } catch (err) {
+      return 'internal server error, try again in a few minutes';
+    }
+  },
+  async [FORGOT_PASSWORD_ACTION](context, payload) {
+    try {
+      const { status, data } = await axios.post(environment.FORGOT_PASSWORD_URL, {
+        email: payload.email,
       }, {
         validateStatus: () => true,
       });

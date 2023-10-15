@@ -102,7 +102,7 @@ export default {
 
           <div class="my-3 d-grid gap-2">
             <button type="button" v-on:click="signUp" class="btn btn-primary btn-block">Sign Up</button>
-            <button type="button" class="btn btn-outline-primary mt-3">Sign In</button>
+            <button type="button" class="btn btn-outline-primary mt-3"><a href="/sign_in">Sign In</a></button>
           </div>
 
           <div class="form-group">
