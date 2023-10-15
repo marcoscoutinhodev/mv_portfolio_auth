@@ -1,7 +1,7 @@
 <script>
 import { mapActions, mapMutations, mapState } from 'vuex';
 
-import { LOADING_SPINNER_MUTATION, SIGN_IN_ACTION } from '../store/storeconstants';
+import { LOADING_SPINNER_MUTATION, EMAIL_VERIFICATION_REQUEST_ACTION } from '../store/storeconstants';
 import TheLoader from '../components/TheLoader.vue';
 
 export default {
@@ -16,32 +16,34 @@ export default {
       alert: null,
       alertMessage: 'invalid credentials',
       email: '',
-      password: '',
     };
   },
   methods: {
     ...mapActions('auth', {
-      signin: SIGN_IN_ACTION,
+      emailverificationrequest: EMAIL_VERIFICATION_REQUEST_ACTION,
     }),
     ...mapMutations({
       showLoadingMutation: LOADING_SPINNER_MUTATION,
     }),
-    async signIn() {
+    async emailVerificationRequest() {
       this.showLoadingMutation(true);
-      const error = await this.signin({
+      const { status, data } = await this.emailverificationrequest({
         email: this.email,
-        password: this.password,
       });
       this.showLoadingMutation(false);
 
-      if (error) {
-        this.alertMessage = Array.isArray(error) ? error.join(' | ') : error;
+      if (status !== 200) {
+        this.alertMessage = Array.isArray(data.error) ? data.error.join(' | ') : data.error;
         this.alert.classList.remove('fade');
         return;
       }
 
       this.email = '';
-      this.password = '';
+
+      this.alertMessage = data.data;
+      this.alert.classList.remove('alert-danger');
+      this.alert.classList.add('alert-successful');
+      this.alert.classList.remove('fade');
     },
   },
   computed: {
@@ -66,7 +68,7 @@ export default {
         </div>
 
         <div class="mt-3 text-center">
-          <h3>Sign In</h3>
+          <h3>Email verification pending?</h3>
           <hr>
         </div>
 
@@ -75,16 +77,9 @@ export default {
             <label for="email">Email</label>
             <input type="text" v-model="email" class="form-control" placeholder="name@email.com">
           </div>
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" v-model="password" class="form-control">
-          </div>
 
           <div class="my-3 d-grid gap-2">
-            <button type="button" v-on:click="signIn" class="btn btn-primary btn-block">Sign In</button>
-            <button type="button" class="btn btn-outline-primary mt-3"><a href="/sign_up">Sign Up</a></button>
-            <button type="button" class="btn btn-outline-primary"><a href="/forgot_password">Forgot your password?</a></button>
-            <button type="button" class="btn btn-outline-primary"><a href="/email_verification_request">Email verification pending?</a></button>
+            <button type="button" v-on:click="emailVerificationRequest" class="btn btn-primary btn-block">Verify Email</button>
           </div>
 
           <div class="form-group">
