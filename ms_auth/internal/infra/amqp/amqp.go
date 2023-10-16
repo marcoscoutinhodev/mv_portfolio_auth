@@ -14,7 +14,7 @@ type AMQP struct {
 func NewAMQP() *AMQP {
 	c, err := amqp.Dial(config.RBMQ_URI)
 	if err != nil {
-		panic(err)
+		return NewAMQP()
 	}
 
 	return &AMQP{

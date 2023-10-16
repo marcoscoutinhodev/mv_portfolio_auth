@@ -36,16 +36,7 @@ data:
       ],
       "queues": [
         {
-          "name": "REGISTER_NOTIFICATION",
-          "vhost": "/",
-          "durable": true,
-          "auto_delete": false,
-          "arguments": {
-            "x-queue-type": "classic"
-          }
-        },
-        {
-          "name": "FORGOT_PASSWORD_NOTIFICATION",
+          "name": "EMAIL_NOTIFICATION",
           "vhost": "/",
           "durable": true,
           "auto_delete": false,
@@ -78,17 +69,9 @@ data:
         {
           "source": "amq.direct",
           "vhost": "/",
-          "destination": "REGISTER_NOTIFICATION",
+          "destination": "EMAIL_NOTIFICATION",
           "destination_type": "queue",
-          "routing_key": "REGISTER_NOTIFICATION",
-          "arguments": {}
-        },
-        {
-          "source": "amq.direct",
-          "vhost": "/",
-          "destination": "FORGOT_PASSWORD_NOTIFICATION",
-          "destination_type": "queue",
-          "routing_key": "FORGOT_PASSWORD_NOTIFICATION",
+          "routing_key": "EMAIL_NOTIFICATION",
           "arguments": {}
         }
       ]
