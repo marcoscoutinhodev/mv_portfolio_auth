@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ms_email_notification_app
+    volumes:
+      - ./:/home/app
+
+networks: 
+  default:
+    name: shared_network
+    external: true

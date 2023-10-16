@@ -1,0 +1,11 @@
+FROM golang:latest
+
+RUN apt update && \
+	apt upgrade -y
+
+WORKDIR /home/app
+
+COPY . .
+RUN go mod tidy
+
+CMD ["tail", "-f", "/dev/null"]

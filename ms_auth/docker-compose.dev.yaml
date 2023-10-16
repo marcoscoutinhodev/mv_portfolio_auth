@@ -41,3 +41,8 @@ services:
       - 15672:15672
     healthcheck:
       test: "exit 0"
+
+networks: 
+  default:
+    name: shared_network
+    external: true
