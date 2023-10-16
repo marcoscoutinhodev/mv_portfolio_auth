@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-email-notification
+spec:
+  selector:
+    matchLabels:
+      app: ms-email-notification
+  template:
+    metadata:
+      labels:
+        app: ms-email-notification
+    spec:
+      containers:
+      - name: ms-email-notification
+        image: marcoscoutinhodev/ms-email-notification:latest
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        envFrom:
+        - secretRef:
+            name: ms-email-notification
