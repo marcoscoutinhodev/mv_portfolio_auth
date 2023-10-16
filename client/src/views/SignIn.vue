@@ -42,6 +42,11 @@ export default {
 
       this.email = '';
       this.password = '';
+
+      this.alertMessage = 'you are authenticated :)';
+      this.alert.classList.remove('alert-danger');
+      this.alert.classList.add('alert-success');
+      this.alert.classList.remove('fade');
     },
   },
   computed: {
