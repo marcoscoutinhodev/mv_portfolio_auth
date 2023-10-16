@@ -2,6 +2,7 @@
 export const SIGN_IN_ACTION = '[action] signin user';
 export const SIGN_UP_ACTION = '[action] signup user';
 export const FORGOT_PASSWORD_ACTION = '[action] forgot password user';
+export const UPDATE_PASSWORD_ACTION = '[action] update user password';
 export const EMAIL_VERIFICATION_REQUEST_ACTION = '[action] email confirmation request user';
 export const CONFIRM_EMAIL_REQUEST_ACTION = '[action] confirming user email';
 

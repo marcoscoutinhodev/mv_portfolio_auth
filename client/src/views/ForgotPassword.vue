@@ -44,7 +44,7 @@ export default {
 
       this.alertMessage = data.data;
       this.alert.classList.remove('alert-danger');
-      this.alert.classList.add('alert-successful');
+      this.alert.classList.add('alert-success');
       this.alert.classList.remove('fade');
     },
   },

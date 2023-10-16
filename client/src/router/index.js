@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import SignIn from '../views/SignIn.vue';
 import SignUp from '../views/SignUp.vue';
 import ForgotPassword from '../views/ForgotPassword.vue';
+import UpdatePassword from '../views/UpdatePassword.vue';
 import EmailVerificationRequest from '../views/EmailVerificationRequest.vue';
 import ConfirmEmail from '../views/ConfirmEmail.vue';
 
@@ -12,6 +13,7 @@ const router = createRouter({
     { name: 'SignIn', path: '/sign_in', component: SignIn },
     { name: 'SignUp', path: '/sign_up', component: SignUp },
     { name: 'ForgotPassword', path: '/forgot_password', component: ForgotPassword },
+    { name: 'UpdatePassword', path: '/update_password', component: UpdatePassword },
     { name: 'EmailVerificationRequest', path: '/email_verification_request', component: EmailVerificationRequest },
     { name: 'ConfirmEmail', path: '/confirm_email', component: ConfirmEmail },
   ],

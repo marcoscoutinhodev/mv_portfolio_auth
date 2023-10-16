@@ -1,7 +1,7 @@
 <script>
 import { mapActions, mapMutations, mapState } from 'vuex';
 
-import { LOADING_SPINNER_MUTATION, SIGN_UP_ACTION } from '../store/storeconstants';
+import { LOADING_SPINNER_MUTATION, UPDATE_PASSWORD_ACTION } from '../store/storeconstants';
 import TheLoader from '../components/TheLoader.vue';
 
 export default {
@@ -15,45 +15,41 @@ export default {
     return {
       alert: null,
       alertMessage: 'invalid credentials',
-      name: '',
-      email: '',
       password: '',
     };
   },
   methods: {
     ...mapActions('auth', {
-      signup: SIGN_UP_ACTION,
+      updatepassword: UPDATE_PASSWORD_ACTION,
     }),
     ...mapMutations({
       showLoadingMutation: LOADING_SPINNER_MUTATION,
     }),
-    async signUp() {
-      this.alert.classList.remove('alert-success');
-      this.alert.classList.add('alert-danger');
-      this.alert.classList.add('fade');
-
+    async updatePassword() {
       this.showLoadingMutation(true);
-      const { status, data } = await this.signup({
-        name: this.name,
-        email: this.email,
+      const token = this.$route.query.t;
+      const { status, data } = await this.updatepassword({
         password: this.password,
+        token,
       });
       this.showLoadingMutation(false);
 
-      if (status !== 201) {
+      if (status !== 200) {
         this.alertMessage = Array.isArray(data.error) ? data.error.join(' | ') : data.error;
         this.alert.classList.remove('fade');
         return;
       }
 
-      this.name = '';
-      this.email = '';
       this.password = '';
 
-      this.alertMessage = data.data;
+      this.alertMessage = 'Password updated successfully';
       this.alert.classList.remove('alert-danger');
       this.alert.classList.add('alert-success');
       this.alert.classList.remove('fade');
+
+      setTimeout(() => {
+        this.$router.push('/sign_in');
+      }, 1500);
     },
   },
   computed: {
@@ -78,31 +74,18 @@ export default {
         </div>
 
         <div class="mt-3 text-center">
-          <h3>Sign Up</h3>
+          <h3>Update your password</h3>
           <hr>
         </div>
 
         <form action="">
           <div class="form-group">
-            <label for="name">Name</label>
-            <input type="text" class="form-control" placeholder="Full Name" v-model="name">
-          </div>
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="text" class="form-control" placeholder="name@email.com" v-model="email">
-            <div id="emailHelper" class="form-text">We'll never share your email with anyone else</div>
-          </div>
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" class="form-control" v-model="password">
-            <small id="passwordHelpBlock" class="form-text text-muted">
-              Your password must be at least 7 characters long, must contain special characters "!@#$%^&*(),.?":{}|&lt;>", numbers, lowercase and uppercase letters only.
-            </small>
+            <label for="password">Passord</label>
+            <input type="password" v-model="password" class="form-control">
           </div>
 
           <div class="my-3 d-grid gap-2">
-            <button type="button" v-on:click="signUp" class="btn btn-primary btn-block">Sign Up</button>
-            <button type="button" class="btn btn-outline-primary mt-3"><a href="/sign_in">Sign In</a></button>
+            <button type="button" v-on:click="updatePassword" class="btn btn-primary btn-block">Update Password</button>
           </div>
 
           <div class="form-group">

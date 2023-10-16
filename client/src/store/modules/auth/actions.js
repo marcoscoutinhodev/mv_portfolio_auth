@@ -2,7 +2,12 @@ import axios from 'axios';
 
 import environment from '../../../config/environment';
 import {
-  SET_USER_DATA, SIGN_IN_ACTION, SIGN_UP_ACTION, FORGOT_PASSWORD_ACTION, EMAIL_VERIFICATION_REQUEST_ACTION, CONFIRM_EMAIL_REQUEST_ACTION,
+  SET_USER_DATA, SIGN_IN_ACTION,
+  SIGN_UP_ACTION,
+  FORGOT_PASSWORD_ACTION,
+  EMAIL_VERIFICATION_REQUEST_ACTION,
+  CONFIRM_EMAIL_REQUEST_ACTION,
+  UPDATE_PASSWORD_ACTION,
 } from '../../storeconstants';
 
 export default {
@@ -87,6 +92,26 @@ export default {
       const { status, data } = await axios.post(environment.CONFIRM_EMAIL_REQUEST_URL, {}, {
         headers: {
           x_access_token: `Bearer ${payload.token}`,
+        },
+        validateStatus: () => true,
+      });
+
+      return {
+        status,
+        data,
+      };
+    } catch (err) {
+      return 'internal server error, try again in a few minutes';
+    }
+  },
+  async [UPDATE_PASSWORD_ACTION](context, payload) {
+    try {
+      const { password, token } = payload;
+      const { status, data } = await axios.post(environment.UPDATE_PASSWORD_URL, {
+        password,
+      }, {
+        headers: {
+          x_access_token: `Bearer ${token}`,
         },
         validateStatus: () => true,
       });
